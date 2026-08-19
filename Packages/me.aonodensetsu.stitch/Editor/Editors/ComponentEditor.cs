@@ -98,7 +98,7 @@ namespace Me.Aonodensetsu.Stitch {
 
     private float GetElementHeight(int index) {
       var property = actionsProperty.GetArrayElementAtIndex(index);
-      return EditorGUI.GetPropertyHeight(property, GUIContent.none, true);
+      return EditorGUI.GetPropertyHeight(property, GUIContent.none, true) + 4f;
     }
   }
 }

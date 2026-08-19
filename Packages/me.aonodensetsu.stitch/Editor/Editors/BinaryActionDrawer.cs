@@ -3,13 +3,9 @@ using UnityEngine;
 
 namespace Me.Aonodensetsu.Stitch {
   [CustomPropertyDrawer(typeof(BinaryAction), true)]
-  internal class BinaryActionDrawer : PropertyDrawer {
-    private GUIStyle boldCenter;
-
+  internal class BinaryActionDrawer : BaseActionDrawer {
     public override void OnGUI(Rect rect, SerializedProperty property, GUIContent label) {
-      boldCenter ??= new GUIStyle(EditorStyles.boldLabel) {
-        alignment = TextAnchor.MiddleCenter
-      };
+      base.OnGUI(rect, property, label);
 
       var result = property.FindPropertyRelative("result");
       var left = property.FindPropertyRelative("left");
@@ -23,7 +19,7 @@ namespace Me.Aonodensetsu.Stitch {
       float actionWidth = boldCenter.CalcSize(new GUIContent(actionName)).x;
       float availableWidth = rect.width - equalsWidth - actionWidth - spacing * 4f;
       float fieldWidth = availableWidth / 3f;
-      float y = rect.y;
+      float y = rect.y + 2f;
       float h = EditorGUIUtility.singleLineHeight;
 
       var resultRect = new Rect(rect.x, y, fieldWidth, h);
@@ -38,16 +34,13 @@ namespace Me.Aonodensetsu.Stitch {
       EditorGUI.LabelField(actionRect, actionName, boldCenter);
       right.stringValue = EditorGUI.TextField(rightRect, right.stringValue);
 
-      if (string.IsNullOrWhiteSpace(result.stringValue)) EditorGUI.DrawRect(new Rect(resultRect.x, resultRect.y, 1f, resultRect.height), Color.yellow);
-      if (string.IsNullOrWhiteSpace(left.stringValue)) EditorGUI.DrawRect(new Rect(leftRect.x, leftRect.y, 1f, leftRect.height), Color.yellow);
-      if (string.IsNullOrWhiteSpace(right.stringValue)) EditorGUI.DrawRect(new Rect(rightRect.x, rightRect.y, 1f, rightRect.height), Color.yellow);
+      if (string.IsNullOrWhiteSpace(result.stringValue) || float.TryParse(result.stringValue, out _)) EditorGUI.DrawRect(new Rect(resultRect.x, resultRect.y, 1f, resultRect.height), Color.yellow);
+      InheritedHighlight(left, leftRect, right, rightRect);
     }
 
-    private static string GetActionName(SerializedProperty property) {
-      var action = property.managedReferenceValue;
-      var attribute = System.Attribute.GetCustomAttribute(action.GetType(), typeof(ActionAttribute)) as ActionAttribute;
-
-      return Strings.Get(attribute?.LocalizationKey) ?? action.GetType().Name;
+    internal virtual void InheritedHighlight(SerializedProperty left, Rect leftRect, SerializedProperty right, Rect rightRect) {
+      if (string.IsNullOrWhiteSpace(left.stringValue)) EditorGUI.DrawRect(new Rect(leftRect.x, leftRect.y, 1f, leftRect.height), Color.yellow);
+      if (string.IsNullOrWhiteSpace(right.stringValue)) EditorGUI.DrawRect(new Rect(rightRect.x, rightRect.y, 1f, rightRect.height), Color.yellow);
     }
   }
 }

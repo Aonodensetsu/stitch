@@ -19,7 +19,7 @@ namespace Me.Aonodensetsu.Stitch {
 
       float actionWidth = boldCenter.CalcSize(new GUIContent(actionName)).x;
       float fieldWidth = rect.width - actionWidth - spacing * 1f;
-      float y = rect.y;
+      float y = rect.y + 2f;
       float h = EditorGUIUtility.singleLineHeight;
 
       var actionRect = new Rect(rect.x, y, actionWidth, h);
@@ -28,7 +28,7 @@ namespace Me.Aonodensetsu.Stitch {
       EditorGUI.LabelField(actionRect, actionName, boldCenter);
       result.stringValue = EditorGUI.TextField(resultRect, result.stringValue);
 
-      if (string.IsNullOrWhiteSpace(result.stringValue)) EditorGUI.DrawRect(new Rect(resultRect.x, resultRect.y, 1f, resultRect.height), Color.yellow);
+      if (string.IsNullOrWhiteSpace(result.stringValue) || float.TryParse(result.stringValue, out _)) EditorGUI.DrawRect(new Rect(resultRect.x, resultRect.y, 1f, resultRect.height), Color.yellow);
     }
 
     private static string GetActionName(SerializedProperty property) {

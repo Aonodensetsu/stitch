@@ -4,6 +4,6 @@ using System;
 namespace Me.Aonodensetsu.Stitch {
   [Serializable]
   [Action("action.and")]
-  public class AndAction : BinaryAction {}
+  public class AndAction : BooleanAction {}
 }
 

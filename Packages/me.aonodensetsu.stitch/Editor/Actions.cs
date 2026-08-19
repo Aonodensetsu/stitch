@@ -17,7 +17,7 @@ namespace Me.Aonodensetsu.Stitch {
       return (BlendTree)Controller.layers[0].stateMachine.states[0].state.motion;
     }
 
-    internal AnimationClip GetOrCreateClip(string name, float value) {
+    internal AnimationClip GetOrCreateClip(string name, float value = 0f) {
       var clip = AssetDatabase.LoadAssetAtPath<AnimationClip>($"Packages/me.aonodensetsu.stitch/Temp/{name}_{value}.anim");
       if (clip != null) return clip;
 
@@ -35,7 +35,11 @@ namespace Me.Aonodensetsu.Stitch {
 
     internal void MakeParameters(string[] s) {
       foreach (var param in s) {
-        if (!Controller.parameters.Any(p => p.name == param)) Controller.AddParameter(param, AnimatorControllerParameterType.Float);
+        if (!Controller.parameters.Any(p => p.name == param)) Controller.AddParameter(new AnimatorControllerParameter {
+          name = param,
+          type = AnimatorControllerParameterType.Float,
+          defaultFloat = float.TryParse(param, out float val) ? val : 0f
+        });
       }
     }
 
@@ -62,13 +66,13 @@ namespace Me.Aonodensetsu.Stitch {
       tertiary.AddChild(negative);
       tertiary.AddChild(positive);
 
-      plus.children = plus.children.Select(c => { c.directBlendParameter = "Weight"; return c; }).ToArray();
+      plus.children = plus.children.Select(c => { c.directBlendParameter = "1"; return c; }).ToArray();
     }
 
     public void Stitch(AndAction a) {
       BlendTree root = GetRoot();
       MakeParameters(new[] { a.result, a.left, a.right });
-      var zero = GetOrCreateClip(a.result, 0f);
+      var zero = GetOrCreateClip(a.result);
 
       var and = root.CreateBlendTreeChild(0);
       and.blendParameter = a.left;
@@ -94,6 +98,24 @@ namespace Me.Aonodensetsu.Stitch {
       });
     }
 
+    public void Stitch(GateAction a) {
+      BlendTree root = GetRoot();
+      MakeParameters(new[] { a.result, a.left, a.right });
+
+      var gate = root.CreateBlendTreeChild(0);
+      gate.blendParameter = a.left;
+
+      var secondary = gate.CreateBlendTreeChild(0);
+      secondary.blendParameter = a.right;
+      secondary.AddChild(GetOrCreateClip(a.result, a.zeroZero));
+      secondary.AddChild(GetOrCreateClip(a.result, a.zeroOne));
+
+      var tertiary = gate.CreateBlendTreeChild(0);
+      tertiary.blendParameter = a.right;
+      tertiary.AddChild(GetOrCreateClip(a.result, a.oneZero));
+      tertiary.AddChild(GetOrCreateClip(a.result, a.oneOne));
+    }
+
     #if HAS_VF
     public void Stitch(GlobalAction a) {
       MakeParameters(new[] { a.result });
@@ -103,7 +125,7 @@ namespace Me.Aonodensetsu.Stitch {
     public void Stitch(MultiplyAction a) {
       BlendTree root = GetRoot();
       MakeParameters(new[] { a.result, a.left, a.right });
-      var zero = GetOrCreateClip(a.result, 0f);
+      var zero = GetOrCreateClip(a.result);
 
       var times = root.CreateBlendTreeChild(0);
       times.blendParameter = a.left;
@@ -124,7 +146,7 @@ namespace Me.Aonodensetsu.Stitch {
       var not = root.CreateBlendTreeChild(0);
       not.blendParameter = a.value;
       not.AddChild(GetOrCreateClip(a.result, 1f));
-      not.AddChild(GetOrCreateClip(a.result, 0f));
+      not.AddChild(GetOrCreateClip(a.result));
     }
 
     public void Stitch(OrAction a) {
@@ -137,10 +159,22 @@ namespace Me.Aonodensetsu.Stitch {
 
       var secondary = or.CreateBlendTreeChild(0);
       secondary.blendParameter = a.right;
-      secondary.AddChild(GetOrCreateClip(a.result, 0f));
+      secondary.AddChild(GetOrCreateClip(a.result));
       secondary.AddChild(one);
 
       or.AddChild(one);
+    }
+
+    public void Stitch(RemapAction a) {
+      BlendTree root = GetRoot();
+      MakeParameters(new[] { a.result, a.value });
+
+      var remap = root.CreateBlendTreeChild(0);
+      remap.blendParameter = a.value;
+      remap.minThreshold = a.lowIn;
+      remap.maxThreshold = a.highIn;
+      remap.AddChild(GetOrCreateClip(a.result, a.lowOut));
+      remap.AddChild(GetOrCreateClip(a.result, a.highOut));
     }
 
     public void Stitch(SubtractAction a) {
@@ -166,7 +200,7 @@ namespace Me.Aonodensetsu.Stitch {
       tertiary.AddChild(positive);
       tertiary.AddChild(negative);
 
-      minus.children = minus.children.Select(c => { c.directBlendParameter = "Weight"; return c; }).ToArray();
+      minus.children = minus.children.Select(c => { c.directBlendParameter = "1"; return c; }).ToArray();
     }
 
     // overload dispatcher
@@ -175,12 +209,14 @@ namespace Me.Aonodensetsu.Stitch {
         case AddAction add: Stitch(add); break;
         case AndAction and: Stitch(and); break;
         case DefaultAction def: Stitch(def); break;
+        case GateAction g: Stitch(g); break;
         #if HAS_VF
         case GlobalAction glo: Stitch(glo); break;
         #endif
         case MultiplyAction mul: Stitch(mul); break;
         case NotAction not: Stitch(not); break;
         case OrAction or: Stitch(or); break;
+        case RemapAction rem: Stitch(rem); break;
         case SubtractAction sub: Stitch(sub); break;
       }
     }

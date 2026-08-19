@@ -24,7 +24,7 @@ namespace Me.Aonodensetsu.Stitch {
 
       var controller = UnityEditor.Animations.AnimatorController.CreateAnimatorControllerAtPath("Packages/me.aonodensetsu.stitch/Temp/Stitch.controller");
       controller.AddParameter(new AnimatorControllerParameter {
-        name = "Weight",
+        name = "1",
         type = AnimatorControllerParameterType.Float,
         defaultFloat = 1f
       });
@@ -35,13 +35,17 @@ namespace Me.Aonodensetsu.Stitch {
       foreach (var component in avatar.GetComponentsInChildren<Component>(true)) {
         var act = new Actions(component, controller);
         foreach (var action in component.actions) {
+          if (!action.Validate()) {
+            Debug.LogWarning("Stitch: Invalid action, skipped.", component);
+            continue;
+          }
           #if HAS_VF
           if (action is GlobalAction) globals.Add(action.result);
           #endif
           act.Stitch(action);
         }
       }
-      tree.children = tree.children.Select(c => { c.directBlendParameter = "Weight"; return c; }).ToArray();
+      tree.children = tree.children.Select(c => { c.directBlendParameter = "1"; return c; }).ToArray();
 
       if (VRCFury != null) VRCFury.Publish(avatar, controller, globals);
       else Instruction.Publish();

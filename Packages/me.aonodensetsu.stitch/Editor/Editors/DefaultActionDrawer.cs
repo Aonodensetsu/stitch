@@ -3,18 +3,14 @@ using UnityEngine;
 
 namespace Me.Aonodensetsu.Stitch {
   [CustomPropertyDrawer(typeof(DefaultAction), true)]
-  internal class DefaultActionDrawer : PropertyDrawer {
-    private GUIStyle boldCenter;
-
+  internal class DefaultActionDrawer : BaseActionDrawer {
     public override void OnGUI(Rect rect, SerializedProperty property, GUIContent label) {
-      boldCenter ??= new GUIStyle(EditorStyles.boldLabel) {
-        alignment = TextAnchor.MiddleCenter
-      };
+      base.OnGUI(rect, property, label);
 
       var result = property.FindPropertyRelative("result");
       var value = property.FindPropertyRelative("value");
       string actionName = GetActionName(property);
-      string defaulttoName = Strings.Get("general.defaultto");
+      string defaulttoName = Strings.Get("general.defaultTo");
 
       const float spacing = 4f;
 
@@ -22,7 +18,7 @@ namespace Me.Aonodensetsu.Stitch {
       float defaulttoWidth = boldCenter.CalcSize(new GUIContent(defaulttoName)).x;
       float availableWidth = rect.width - defaulttoWidth - actionWidth - spacing * 3f;
       float fieldWidth = availableWidth / 2f;
-      float y = rect.y;
+      float y = rect.y + 2f;
       float h = EditorGUIUtility.singleLineHeight;
 
       var actionRect = new Rect(rect.x, y, actionWidth, h);
@@ -35,15 +31,8 @@ namespace Me.Aonodensetsu.Stitch {
       EditorGUI.LabelField(defaulttoRect, defaulttoName, boldCenter);
       value.floatValue = EditorGUI.FloatField(valueRect, value.floatValue);
 
-      if (string.IsNullOrWhiteSpace(result.stringValue)) EditorGUI.DrawRect(new Rect(resultRect.x, resultRect.y, 1f, resultRect.height), Color.yellow);
+      if (string.IsNullOrWhiteSpace(result.stringValue) || float.TryParse(result.stringValue, out _)) EditorGUI.DrawRect(new Rect(resultRect.x, resultRect.y, 1f, resultRect.height), Color.yellow);
       if (float.IsNaN(value.floatValue)) EditorGUI.DrawRect(new Rect(valueRect.x, valueRect.y, 1f, valueRect.height), Color.yellow);
-    }
-
-    private static string GetActionName(SerializedProperty property) {
-      var action = property.managedReferenceValue;
-      var attribute = System.Attribute.GetCustomAttribute(action.GetType(), typeof(ActionAttribute)) as ActionAttribute;
-
-      return Strings.Get(attribute?.LocalizationKey) ?? action.GetType().Name;
     }
   }
 }
