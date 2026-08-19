@@ -1,0 +1,13 @@
+{
+  "name": "me.aonodensetsu.stitch",
+  "displayName": "Stitch",
+  "version": "1.0.0",
+  "description": "Controller Logic Helper for Parameter Interactions",
+  "unity": "2022.3",
+  "author": {
+    "name": "Aonodensetsu"
+  },
+  "vpmDependencies": {
+    "com.vrchat.base": ">=3.3"
+  }
+}

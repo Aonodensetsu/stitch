@@ -1,0 +1,8 @@
+{
+  "name": "Stitch.Runtime",
+  "versionDefines": [{
+    "name": "com.vrcfury.vrcfury",
+    "expression": "",
+    "define": "HAS_VF"
+  }]
+}

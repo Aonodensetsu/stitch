@@ -1,0 +1,14 @@
+{
+  "support.description": "Stitch together parameters using simple expressions rather than playing with animator states!\n\nType in parameter names for Stitch to join together using common logical or mathematical operations. A blend tree will be inserted into your animator.",
+  "support.manualpublish": "Stitch can integrate with other packages to deploy its changes automatically (currently VRCFury) in a non-destructive way. Supported tools were not detected, so you should manually add the generated controller (linked below) to your avatar.\n\nAs long as this prefab exists at its current location, Stitch will not recreate temporary assets, meaning no changes to Stitch components will be detected, but you will be able to use the generated controller without it being destroyed each build. To let Stitch run again on next build, remove this prefab.",
+  "general.equal": "=",
+  "general.defaultto": "to",
+  "action.global": "Global",
+  "action.default": "Default",
+  "action.and": "∧",
+  "action.or": "∨",
+  "action.not": "¬",
+  "action.add": "+",
+  "action.subtract": "−",
+  "action.multiply": "×"
+}
