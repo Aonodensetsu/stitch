@@ -2,6 +2,7 @@ using UnityEditor.Animations;
 using UnityEditor;
 using UnityEngine;
 using System.Linq;
+using System;
 
 namespace Me.Aonodensetsu.Stitch {
   internal class Actions {
@@ -31,6 +32,11 @@ namespace Me.Aonodensetsu.Stitch {
       AssetDatabase.CreateAsset(clip, $"Packages/me.aonodensetsu.stitch/Temp/{name}_{value}.anim");
       AssetDatabase.SaveAssets();
       return clip;
+    }
+
+    internal string InternParam() {
+      var rand = Guid.NewGuid().ToString("N");
+      return $"StitchInternal_{rand}";
     }
 
     internal void MakeParameters(string[] s) {
@@ -177,6 +183,70 @@ namespace Me.Aonodensetsu.Stitch {
       remap.AddChild(GetOrCreateClip(a.result, a.highOut));
     }
 
+    public void Stitch(SmoothAction a) {
+      BlendTree root = GetRoot();
+      string delta = a.delta.ToString();
+      MakeParameters(new[] { a.result, a.value, delta });
+
+      var negative = GetOrCreateClip(a.result, -100f);
+      var positive = GetOrCreateClip(a.result, 100f);
+
+      var smooth = root.CreateBlendTreeChild(0);
+
+      var secondary = smooth.CreateBlendTreeChild(0);
+      secondary.minThreshold = -100f;
+      secondary.maxThreshold = 100f;
+      secondary.blendParameter = a.value;
+
+      var tertiary = smooth.CreateBlendTreeChild(0);
+      tertiary.minThreshold = -100f;
+      tertiary.maxThreshold = 100f;
+      tertiary.blendParameter = a.result;
+
+      switch (a.type) {
+        case SmoothAction.SmoothType.Exponential:
+          smooth.blendParameter = delta;
+
+          secondary.AddChild(negative);
+          secondary.AddChild(positive);
+
+          tertiary.AddChild(negative);
+          tertiary.AddChild(positive);
+          break;
+        case SmoothAction.SmoothType.Linear:
+          smooth.blendType = BlendTreeType.Direct;
+
+          var r = InternParam();
+          MakeParameters(new[] { r });
+          var negativer = GetOrCreateClip(r, -100f);
+          var positiver = GetOrCreateClip(r, 100f);
+
+          secondary.AddChild(negativer);
+          secondary.AddChild(positiver);
+
+          tertiary.AddChild(positiver);
+          tertiary.AddChild(negativer);
+
+          var quarternary = smooth.CreateBlendTreeChild(0);
+          quarternary.minThreshold = -100f;
+          quarternary.maxThreshold = 100f;
+          quarternary.blendParameter = a.result;
+          quarternary.AddChild(negative);
+          quarternary.AddChild(positive);
+
+          var quinary = smooth.CreateBlendTreeChild(0);
+          quinary.minThreshold = -0.1f;
+          quinary.maxThreshold = 0.1f;
+          quinary.blendParameter = r;
+          quinary.AddChild(GetOrCreateClip(a.result, -1f));
+          quinary.AddChild(GetOrCreateClip(a.result, 0f));
+          quinary.AddChild(GetOrCreateClip(a.result, 1f));
+
+          smooth.children = smooth.children.Select((c, ix) => { c.directBlendParameter = ix == 3 ? delta : "1"; return c; }).ToArray();
+          break;
+      }
+    }
+
     public void Stitch(SubtractAction a) {
       BlendTree root = GetRoot();
       MakeParameters(new[] { a.result, a.left, a.right });
@@ -217,6 +287,7 @@ namespace Me.Aonodensetsu.Stitch {
         case NotAction not: Stitch(not); break;
         case OrAction or: Stitch(or); break;
         case RemapAction rem: Stitch(rem); break;
+        case SmoothAction sm: Stitch(sm); break;
         case SubtractAction sub: Stitch(sub); break;
       }
     }

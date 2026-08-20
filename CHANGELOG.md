@@ -1,3 +1,6 @@
+1.2.0:
+- added the Smooth action (linear and exponential variants)
+
 1.1.0:
 - added input validation (oops)
 - added constant input to math operations
