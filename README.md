@@ -1,76 +1,129 @@
-# VPM Package Template
+# Stitch
 
-Starter for making Packages, including automation for building and publishing them.
+### Controller Logic Helper for Parameter Interactions
 
-Once you're all set up, you'll be able to push changes to this repository and have .zip and .unitypackage versions automatically generated, and a listing made which works in the VPM for delivering updates for this package. If you want to make a listing with a variety of packages, check out our [template-package-listing](https://github.com/vrchat-community/template-package-listing) repo.
+Stitch is a tool inspired by VRCFury (and integrating with it) that aims at the place VRCFury deliberately excludes from its scope - Controllers.  
+Stitch can be used without VRCFury installed, but works better (automatically) alongside it.
 
-## ▶ Getting Started
+### Usage
 
-* Press [![Use This Template](https://user-images.githubusercontent.com/737888/185467681-e5fdb099-d99f-454b-8d9e-0760e5a6e588.png)](https://github.com/vrchat-community/template-package/generate)
-to start a new GitHub project based on this template.
-  * Choose a fitting repository name and description.
-  * Set the visibility to 'Public'. You can also choose 'Private' and change it later.
-  * You don't need to select 'Include all branches.'
-* Clone this repository locally using Git.
-  * If you're unfamiliar with Git and GitHub, [visit GitHub's documentation](https://docs.github.com/en/get-started/quickstart/git-and-github-learning-resources) to learn more.
-* Add the folder to Unity Hub and open it as a Unity Project.
-* After opening the project, wait while the VPM resolver is downloaded and added to your project.
-  * This gives you access to the VPM Package Maker and Package Resolver tools.
+Stitch comes as a VPM package, so just click: ![add it to vcc](https://img.shields.io/badge/Add_Stitch_to_VCC-blue?link=vcc%3A%2F%2Fvpm%2FaddRepo%3Furl%3Dhttps%3A%2F%2FAonodensetsu.github.io%2Fstitch%2Findex.json), then add it to your project and you're all set!
 
-## 🚇 Migrating Assets Package
-Full details at [Converting Assets to a VPM Package](https://vcc.docs.vrchat.com/guides/convert-unitypackage)
+In similar vein to other non-destructive editors, click Add Component at the bottom of any of your avatar's objects, and choose Stitch to use its features.
 
-## ✏️ Working on Your Package
+Stitch shows up as a simple menu with a list where you can add Actions.
 
-* Delete the "Packages/com.vrchat.demo-template" directory or reuse it for your own package.
-  * If you reuse the package, don't forget to rename it and add generated meta files to your repository!
-* Update the `.gitignore` file in the "Packages" directory to include your package.
-  * For example, change `!com.vrchat.demo-template` to `!com.username.package-name`.
-  * `.gitignore` files normally *exclude* the contents of your "Packages" directory. This `.gitignore` in this template show how to *include* the demo package. You can easily change this out for your own package name.
-* Open the Unity project and work on your package's files in your favorite code editor.
-* When you're ready, commit and push your changes.
-* Once you've set up the automation as described below, you can easily publish new versions.
+![component view](media/stitch.png)
 
-## 🤖 Setting up the Automation
+In the case VRCFury is not installed, after setting up Stitch, click Build & Test (or Build & Publish) in the VRChat SDK panel at which time Stitch will create a prefab with instructions to manually add the resulting controller to your avatar in whichever way you usually do it. The manual deployment method is not recommended, but included for completeness.
 
-Create a repository variable with the name and value described below.
-For details on how to create repository variables, see [Creating Configuration Variables for a Repository](https://docs.github.com/en/actions/learn-github-actions/variables#creating-configuration-variables-for-a-repository).
-Make sure you are creating a **repository variable**, and not a **repository secret**.
+![manual usage reminder](media/reminder.png)
 
-* `PACKAGE_NAME`: the name of your package, like `com.vrchat.demo-template`.
+<details>
+<summary>Actions</summary>
 
-Finally, go to the "Settings" page for your repo, then choose "Pages", and look for the heading "Build and deployment". Change the "Source" dropdown from "Deploy from a branch" to "GitHub Actions".
+Technically, Stitch is a UI for [Advanced BlendTree Techniques](https://vrc.school/docs/Other/Advanced-BlendTrees).  
+The created parameters are [AAPs](https://vrc.school/docs/Other/AAPs).  
+The possibilities of those and their limitations apply.
 
-That's it!
-Some other notes:
-* We highly recommend you keep the existing folder structure of this template.
-  * The root of the project should be a Unity project.
-  * Your packages should be in the "Packages" directory.
-  * If you deviate from this folder structure, you'll need to update the paths that assume your package is in the "Packages" directory on lines 24, 38, 41 and 57.
-* If you want to store and generate your web files in a folder other than "Website" in the root, you can change the `listPublicDirectory` item [here in build-listing.yml](.github/workflows/build-listing.yml#L17).
+### Add [+]
 
-## 🎉 Publishing a Release
+![add action](media/add.png)
 
-You can make a release by running the [Build Release](.github/workflows/release.yml) action. The version specified in your `package.json` file will be used to define the version of the release.
+The Add action adds the values of two parameters.  
+The input values are restricted in the range -100 to 100.  
+For the mathematical actions, either parameter input can be replaced with a number - that number will be treated as a constant.
 
-## 📃 Rebuilding the Listing
+### And [∧]
 
-Whenever you make a change to a release - manually publishing it, or manually creating, editing or deleting a release, the [Build Repo Listing](.github/workflows/build-listing.yml) action will make a new index of all the releases available, and publish them as a website hosted fore free on [GitHub Pages](https://pages.github.com/). This listing can be used by the VPM to keep your package up to date, and the generated index page can serve as a simple landing page with info for your package. The URL for your package will be in the format `https://username.github.io/repo-name`.
+![and action](media/and.png)
 
-## 🏠 Customizing the Landing Page (Optional)
+The And action is the AND logic gate.  
+The output is on when both inputs are on.  
+The input values are restricted in the range 0 to 1.
 
-The action which rebuilds the listing also publishes a landing page. The source for this page is in `Website/index.html`. The automation system uses [Scriban](https://github.com/scriban/scriban) to fill in the objects like `{{ this }}` with information from the latest release's manifest, so it will stay up-to-date with the name, id and description that you provide there. You are welcome to modify this page however you want - just use the existing `{{ template.objects }}` to fill in that info wherever you like. The entire contents of your "Website" folder are published to your GitHub Page each time.
+### Default
 
-## 💻 Technical Stuff
+![default action](media/default.png)
 
-You are welcome to make your own changes to the automation process to make it fit your needs, and you can create Pull Requests if you have some changes you think we should adopt. Here's some more info on the included automation:
+The Default action sets the default value of the parameter created in the controller.
 
-### Build Release Action
-[release.yml](/.github/workflows/release.yml)
+### Gate
 
-This is a composite action combining a variety of existing GitHub Actions and some shell commands to create both a .zip of your Package and a .unitypackage. It creates a release which is named for the `version` in the `package.json` file found in your target Package, and publishes the zip, the unitypackage and the package.json file to this release.
+![gate action](media/gate.png)
 
-### Build Repo Listing
-[build-listing.yml](.github/workflows/build-listing.yml)
+The Gate action is an arbitrary logic gate.  
+The output can take one of four values depending on the inputs.  
+The input values are restricted in the range 0 to 1.
 
-This is a composite action which builds a vpm-compatible [Repo Listing](https://vcc.docs.vrchat.com/vpm/repos) based on the releases you've created. In order to find all your releases and combine them into a listing, it checks out [another repository](https://github.com/vrchat-community/package-list-action) which has a [Nuke](https://nuke.build/) project which includes the VPM core lib to have access to its types and methods. This project will be expanded to include more functionality in the future - for now, the action just calls its `BuildRepoListing` target.
+The And action corresponds to a Gate of 0,0,0,1.  
+The Or action corresponds to a Gate of 0,1,1,1.  
+The Not action corresponds to a Gate of 1,0,0,0 with the same input parameter used twice.  
+The above gates are used commonly enough they have their own more optimized actions, use those instead.
+
+00 - Left and right inputs are zero.  
+01 - Left input is zero, right input is one.  
+eg.
+
+### Global (VRCFury)
+
+![global action](media/global.png)
+
+The Global action sets a parameters as Global in the Full Controller created by Stitch.  
+VRCFury by default renames all parameters to not cause conflicts, use this action when a parameter is shared between different setups.
+
+### Multiply [×]
+
+![multiply action](media/multiply.png)
+
+The Multiply action multiplies the values of two parameters.  
+The input values are restricted in the range 0 to 10.  
+For the mathematical actions, either parameter input can be replaced with a number - that number will be treated as a constant.
+
+### Not [¬]
+
+![not action](media/not.png)
+
+The Not action is the NOT logic gate.  
+The output is on when the input is off.  
+The input value is restricted in the range 0 to 1.  
+This is equivalent to the Subtract action with 1 as the first parameter, this implementation is more performant.
+
+### Or [∨]
+
+![or action](media/or.png)
+
+The Or action is the OR logic gate.  
+The output is on when either of the inputs is on.  
+The input value is restricted in the range 0 to 1.
+
+### Remap
+
+![remap action](media/remap.png)
+
+The Remap action allows modifying the range of values a parameter takes on.  
+The output takes on a value based on the percentage along the input range.
+
+For example, a remap of 0-1 to 2-0 will change values: 0 -> 2, 0.1 -> 1.8, 0.2 -> 1.6, 0.9 -> 0.2.
+
+### Smooth
+
+![smooth action](media/smooth.png)
+
+The Smooth action performs parameter smoothing over time.  
+The output value will approach the input value smoothly over time based on the smoothing type and strength.  
+The smoothing strength is restricted in the range 0 to 1.
+
+### Subtract [−]
+
+![subtract action](media/subtract.png)
+
+The Subtract action subtracts the value of one input from the other.  
+The input values are restricted in the range -100 to 100.  
+This is equivalent to the Add action with the second parameter negated.  
+For the mathematical actions, either parameter input can be replaced with a number - that number will be treated as a constant.
+
+</details>
+
+Repo templated from https://github.com/vrchat-community/template-package.
+
