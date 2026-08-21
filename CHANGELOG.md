@@ -1,3 +1,11 @@
+1.3.0:
+- Modular Avatar support
+- localization support for the remaining visible elements (action buttons, debug messages)
+- moved the add/remove action buttons above the list
+- controller layer renamed to Stitch instead of the default Base Layer, for easier debug
+- creates object under the avatar root to not propagate MA/VF parameter renames
+- enlarged the Actions dropdown in the readme :p
+
 1.2.0:
 - added the Smooth action (linear and exponential variants)
 

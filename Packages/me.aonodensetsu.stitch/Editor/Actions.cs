@@ -6,11 +6,11 @@ using System;
 
 namespace Me.Aonodensetsu.Stitch {
   internal class Actions {
-    private Component Comp;
+    private StitchMenu Menu;
     private AnimatorController Controller;
 
-    public Actions(Component component, AnimatorController controller) {
-      Comp = component;
+    public Actions(StitchMenu menu, AnimatorController controller) {
+      Menu = menu;
       Controller = controller;
     }
 
@@ -122,7 +122,7 @@ namespace Me.Aonodensetsu.Stitch {
       tertiary.AddChild(GetOrCreateClip(a.result, a.oneOne));
     }
 
-    #if HAS_VF
+    #if HAS_VF || HAS_MA
     public void Stitch(GlobalAction a) {
       MakeParameters(new[] { a.result });
     }
@@ -280,7 +280,7 @@ namespace Me.Aonodensetsu.Stitch {
         case AndAction and: Stitch(and); break;
         case DefaultAction def: Stitch(def); break;
         case GateAction g: Stitch(g); break;
-        #if HAS_VF
+        #if HAS_VF || HAS_MA
         case GlobalAction glo: Stitch(glo); break;
         #endif
         case MultiplyAction mul: Stitch(mul); break;

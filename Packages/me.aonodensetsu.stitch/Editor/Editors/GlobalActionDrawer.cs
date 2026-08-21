@@ -1,8 +1,9 @@
+#if HAS_VF || HAS_MA
+
 using UnityEditor;
 using UnityEngine;
 
 namespace Me.Aonodensetsu.Stitch {
-  #if HAS_VF
   [CustomPropertyDrawer(typeof(GlobalAction), true)]
   internal class GlobalActionDrawer : PropertyDrawer {
     private GUIStyle boldCenter;
@@ -38,6 +39,6 @@ namespace Me.Aonodensetsu.Stitch {
       return Strings.Get(attribute?.LocalizationKey) ?? action.GetType().Name;
     }
   }
-  #endif
 }
+#endif
 

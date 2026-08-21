@@ -1,14 +1,23 @@
 {
   "name": "Stitch.Editor",
   "references": [
-    "Stitch.Runtime"
+    "Stitch.Runtime",
+    "com.vrcfury.api",
+    "nadena.dev.modular-avatar.core"
   ],
   "includePlatforms": [
     "Editor"
   ],
-  "versionDefines": [{
-    "name": "com.vrcfury.vrcfury",
-    "expression": "",
-    "define": "HAS_VF"
-  }]
+  "versionDefines": [
+    {
+      "name": "com.vrcfury.vrcfury",
+      "expression": "",
+      "define": "HAS_VF"
+    },
+    {
+      "name": "nadena.dev.modular-avatar",
+      "expression": "",
+      "define": "HAS_MA"
+    }
+  ]
 }

@@ -2,8 +2,8 @@
 
 ### Controller Logic Helper for Parameter Interactions
 
-Stitch is a tool inspired by VRCFury (and integrating with it) that aims at the place VRCFury deliberately excludes from its scope - Controllers.  
-Stitch can be used without VRCFury installed, but works better (automatically) alongside it.
+Stitch is a tool inspired by VRCFury (and integrating with it or Modular Avatar) that aims at the place VRCFury deliberately excludes from its scope - Controllers.  
+Stitch can be used without VRCFury or Modular Avatar installed, but works better (automatically) alongside them.
 
 ### Usage
 
@@ -15,12 +15,12 @@ Stitch shows up as a simple menu with a list where you can add Actions.
 
 ![component view](media/stitch.png)
 
-In the case VRCFury is not installed, after setting up Stitch, click Build & Test (or Build & Publish) in the VRChat SDK panel at which time Stitch will create a prefab with instructions to manually add the resulting controller to your avatar in whichever way you usually do it. The manual deployment method is not recommended, but included for completeness.
+In the case VRCFury or Modular Avatar are not installed, after setting up Stitch, click Build & Test (or Build & Publish) in the VRChat SDK panel at which time Stitch will create a prefab with instructions to manually add the resulting controller to your avatar in whichever way you usually do it. The manual deployment method is not recommended, but included for completeness.
 
 ![manual usage reminder](media/reminder.png)
 
 <details>
-<summary>Actions</summary>
+<summary><h2>Actions</h2></summary>
 
 Technically, Stitch is a UI for [Advanced BlendTree Techniques](https://vrc.school/docs/Other/Advanced-BlendTrees).  
 The created parameters are [AAPs](https://vrc.school/docs/Other/AAPs).  
@@ -65,12 +65,13 @@ The above gates are used commonly enough they have their own more optimized acti
 01 - Left input is zero, right input is one.  
 eg.
 
-### Global (VRCFury)
+### Global (VF, MA)
 
 ![global action](media/global.png)
 
-The Global action sets a parameters as Global in the Full Controller created by Stitch.  
-VRCFury by default renames all parameters to not cause conflicts, use this action when a parameter is shared between different setups.
+The Global action sets a parameter as Global in the Full Controller created by Stitch.  
+By default, Stitch will use the features of VRCFury or Modular Avatar to prevent conflicts between parameters created through other means.  
+Use this action when a parameter needs to be shared between different setups.
 
 ### Multiply [×]
 

@@ -4,8 +4,8 @@ using UnityEngine;
 using System;
 
 namespace Me.Aonodensetsu.Stitch {
-  [CustomEditor(typeof(Component))]
-  internal class ComponentEditor : Editor {
+  [CustomEditor(typeof(StitchMenu))]
+  internal class StitchMenuEditor : Editor {
     private UnityEditorInternal.ReorderableList actions;
     private SerializedProperty actionsProperty;
     private GUIStyle desc;
@@ -28,17 +28,20 @@ namespace Me.Aonodensetsu.Stitch {
       serializedObject.Update();
       EditorGUILayout.LabelField(Strings.Get("support.description"), desc);
       EditorGUILayout.Space(4);
-      actions.DoLayoutList();
       DrawActionButtons();
+      actions.DoLayoutList();
       serializedObject.ApplyModifiedProperties();
     }
 
     private void DrawActionButtons() {
       using (new EditorGUILayout.HorizontalScope()) {
-        GUILayout.FlexibleSpace();
-        if (GUILayout.Button("+", GUILayout.Width(28))) ShowAddMenu();
+        var add = Strings.Get("support.addAction");
+        var remove = Strings.Get("support.removeAction");
+        var addSize = GUI.skin.button.CalcSize(new GUIContent(add));
+        var removeSize = GUI.skin.button.CalcSize(new GUIContent(remove));
+        if (GUILayout.Button(add, GUILayout.Width(addSize.x + 4f), GUILayout.Height(addSize.y + 2f))) ShowAddMenu();
         using (new EditorGUI.DisabledGroupScope(actions.index < 0)) {
-          if (GUILayout.Button("-", GUILayout.Width(28))) RemoveAction();
+          if (GUILayout.Button(remove, GUILayout.Width(removeSize.x + 4f), GUILayout.Height(removeSize.y + 2f))) RemoveAction();
         }
       }
     }

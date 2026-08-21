@@ -15,10 +15,10 @@ namespace Me.Aonodensetsu.Stitch {
       };
 
       var model = (StitchPublishReminder)target;
-      EditorGUILayout.LabelField(Strings.Get("support.manualpublish"), desc);
+      EditorGUILayout.LabelField(Strings.Get("support.manualPublish"), desc);
       EditorGUILayout.Space(2);
       using (new EditorGUI.DisabledGroupScope(true)) {
-        EditorGUILayout.ObjectField("Controller (clickable link)", model.controller, typeof(AnimatorController), false);
+        EditorGUILayout.ObjectField(Strings.Get("support.controller"), model.controller, typeof(AnimatorController), false);
       }
     }
   }

@@ -2,30 +2,75 @@ using System.Collections.Generic;
 using UnityEditor.Animations;
 using UnityEditor;
 using UnityEngine;
+using System.Linq;
+
+#if HAS_VF
+using com.vrcfury.api;
+#endif
+
+#if HAS_MA
+using nadena.dev.modular_avatar.core;
+#endif
+
 
 namespace Me.Aonodensetsu.Stitch {
   internal interface Publisher {
-    void Publish(GameObject avatar = null, AnimatorController controller = null, List<string> globals = null);
+    void Publish(GameObject obj, AnimatorController controller, List<string> globals);
   }
 
   internal class InstructionPublisher : Publisher {
-    public void Publish(GameObject avatar = null, AnimatorController controller = null, List<string> globals = null) {
-      var flag = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/STITCH_PUBLISH_REMINDER.prefab");
-      if (flag == null) {
-        var controllerfile = AssetDatabase.LoadAssetAtPath<AnimatorController>("Packages/me.aonodensetsu.stitch/Temp/Stitch.controller");
+    internal string flagPath = $"Assets/{Strings.Get("general.manualFlag")}.prefab";
 
-        var obj = new GameObject("STITCH_PUBLISH_REMINDER");
+    public GameObject FlagObj() {
+      return AssetDatabase.LoadAssetAtPath<GameObject>(flagPath);
+    }
+
+    public void Publish(GameObject obj, AnimatorController controller, List<string> globals = null) {
+      var flag = FlagObj();
+      if (flag == null) {
         obj.tag = "EditorOnly";
         UnityEditorInternal.InternalEditorUtility.SetIsInspectorExpanded(obj.transform, false);
 
         var component = obj.AddComponent<StitchPublishReminder>();
-        component.controller = controllerfile;
-        var asset = PrefabUtility.SaveAsPrefabAsset(obj, "Assets/STITCH_PUBLISH_REMINDER.prefab");
-        Object.DestroyImmediate(obj);
+        component.controller = controller;
+        var asset = PrefabUtility.SaveAsPrefabAsset(obj, flagPath);
 
-        Debug.LogError("Stitch: No supported auto-publishing method found in project, deploy the built controller manually.", asset);
+        Debug.LogError($"Stitch: {Strings.Get("log.manualPublish")}", asset);
       }
     }
   }
+
+  #if HAS_VF
+  internal class VRCFuryPublisher : Publisher {
+    public void Publish(GameObject obj, AnimatorController controller, List<string> globals) {
+      var fc = FuryComponents.CreateFullController(obj);
+      foreach (var p in globals) fc.AddGlobalParam(p);
+      fc.AddController(controller);
+    }
+  }
+  #endif
+
+  #if HAS_MA
+  internal class ModularAvatarPublisher : Publisher {
+    public void Publish(GameObject obj, AnimatorController controller, List<string> globals) {
+      var mp = obj.AddComponent<ModularAvatarParameters>();
+      mp.parameters.AddRange(
+        controller.parameters.Select(p => new ParameterConfig {
+          nameOrPrefix = p.name,
+          isPrefix = false,
+          defaultValue = p.defaultFloat,
+          syncType = ParameterSyncType.NotSynced,
+          internalParameter = !globals.Contains(p.name),
+          localOnly = true,
+          saved = false
+        })
+      );
+      var mc = obj.AddComponent<ModularAvatarMergeAnimator>();
+      mc.animator = controller;
+      mc.matchAvatarWriteDefaults = true;
+      mc.deleteAttachedAnimator = true;
+    }
+  }
+  #endif
 }
 

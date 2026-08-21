@@ -1,8 +1,15 @@
 {
   "name": "Stitch.Runtime",
-  "versionDefines": [{
-    "name": "com.vrcfury.vrcfury",
-    "expression": "",
-    "define": "HAS_VF"
-  }]
+  "versionDefines": [
+    {
+      "name": "com.vrcfury.vrcfury",
+      "expression": "",
+      "define": "HAS_VF"
+    },
+    {
+      "name": "nadena.dev.modular-avatar",
+      "expression": "",
+      "define": "HAS_MA"
+    }
+  ]
 }
