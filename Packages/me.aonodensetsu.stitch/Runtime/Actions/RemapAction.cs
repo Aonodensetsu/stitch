@@ -11,7 +11,7 @@ namespace Me.Aonodensetsu.Stitch {
     public float highOut;
 
     public override bool Validate() {
-      return !float.TryParse(result, out _) && !float.TryParse(value, out _) && highIn > lowIn;
+      return !float.TryParse(result, out _) && !float.TryParse(value, out _) && highIn > lowIn && highOut != lowOut;
     }
   }
 }

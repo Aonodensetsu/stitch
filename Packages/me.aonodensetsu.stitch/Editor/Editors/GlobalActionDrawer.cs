@@ -1,5 +1,3 @@
-#if HAS_VF || HAS_MA
-
 using UnityEditor;
 using UnityEngine;
 
@@ -40,5 +38,4 @@ namespace Me.Aonodensetsu.Stitch {
     }
   }
 }
-#endif
 

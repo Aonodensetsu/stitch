@@ -26,10 +26,15 @@ namespace Me.Aonodensetsu.Stitch {
       };
 
       serializedObject.Update();
+      var id = serializedObject.FindProperty("id");
+      if (string.IsNullOrEmpty(id.stringValue)) id.stringValue = Guid.NewGuid().ToString("N")[..7];
       EditorGUILayout.LabelField(Strings.Get("support.description"), desc);
       EditorGUILayout.Space(4);
       DrawActionButtons();
       actions.DoLayoutList();
+      #if !HAS_VF && !HAS_MA
+      EditorGUILayout.HelpBox(Strings.Get("support.menuMissingTools"), MessageType.Error);
+      #endif
       serializedObject.ApplyModifiedProperties();
     }
 
@@ -37,12 +42,16 @@ namespace Me.Aonodensetsu.Stitch {
       using (new EditorGUILayout.HorizontalScope()) {
         var add = Strings.Get("support.addAction");
         var remove = Strings.Get("support.removeAction");
+        var id = ((StitchMenu)target).id;
         var addSize = GUI.skin.button.CalcSize(new GUIContent(add));
         var removeSize = GUI.skin.button.CalcSize(new GUIContent(remove));
+        var idSize = EditorStyles.miniLabel.CalcSize(new GUIContent(id));
         if (GUILayout.Button(add, GUILayout.Width(addSize.x + 4f), GUILayout.Height(addSize.y + 2f))) ShowAddMenu();
         using (new EditorGUI.DisabledGroupScope(actions.index < 0)) {
           if (GUILayout.Button(remove, GUILayout.Width(removeSize.x + 4f), GUILayout.Height(removeSize.y + 2f))) RemoveAction();
         }
+        GUILayout.FlexibleSpace();
+        EditorGUILayout.LabelField(id, EditorStyles.miniLabel, GUILayout.Width(idSize.x));
       }
     }
 

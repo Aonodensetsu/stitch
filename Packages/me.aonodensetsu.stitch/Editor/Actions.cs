@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEditor.Animations;
 using UnityEditor;
 using UnityEngine;
@@ -6,11 +7,43 @@ using System;
 
 namespace Me.Aonodensetsu.Stitch {
   internal class Actions {
-    private StitchMenu Menu;
     private AnimatorController Controller;
+    private readonly Dictionary<(string name, float value), AnimationClip> clips = new();
 
-    public Actions(StitchMenu menu, AnimatorController controller) {
-      Menu = menu;
+    public static readonly HashSet<string> VRCGlobals = new HashSet<string> {
+      "IsLocal",
+      "PreviewMode",
+      "Viseme",
+      "Voice",
+      "GestureLeft",
+      "GestureRight",
+      "GestureLeftWeight",
+      "GestureRightWeight",
+      "AngularY",
+      "VelocityX",
+      "VelocityY",
+      "VelocityZ",
+      "VelocityMagnitude",
+      "Upright",
+      "Grounded",
+      "Seated",
+      "AFK",
+      "TrackingType",
+      "VRMode",
+      "MuteSelf",
+      "InStation",
+      "Earmuffs",
+      "IsOnFriendsList",
+      "AvatarVersion",
+      "IsAnimatorEnabled",
+      "ScaleModified",
+      "ScaleFactor",
+      "ScaleFactorInverse",
+      "EyeHeightAsMeters",
+      "EyeHeightAsPercent"
+    };
+
+    public Actions(AnimatorController controller) {
       Controller = controller;
     }
 
@@ -19,24 +52,20 @@ namespace Me.Aonodensetsu.Stitch {
     }
 
     internal AnimationClip GetOrCreateClip(string name, float value = 0f) {
-      var clip = AssetDatabase.LoadAssetAtPath<AnimationClip>($"Packages/me.aonodensetsu.stitch/Temp/{name}_{value}.anim");
-      if (clip != null) return clip;
-
-      clip = new AnimationClip { name = name };
+      var key = (name, value);
+      if (clips.TryGetValue(key, out var clip)) return clip;
+      clip = new AnimationClip { name = $"{name}_{value}", frameRate = 60f };
       AnimationUtility.SetEditorCurve(
         clip,
         EditorCurveBinding.FloatCurve("", typeof(Animator), name),
-        new AnimationCurve(new Keyframe(9f, value))
+        new AnimationCurve(new Keyframe(0f, value), new Keyframe(1f / 60f, value))
       );
-
-      AssetDatabase.CreateAsset(clip, $"Packages/me.aonodensetsu.stitch/Temp/{name}_{value}.anim");
-      AssetDatabase.SaveAssets();
+      clips.Add(key, clip);
       return clip;
     }
 
     internal string InternParam() {
-      var rand = Guid.NewGuid().ToString("N");
-      return $"StitchInternal_{rand}";
+      return $"StitchInternal_{Guid.NewGuid().ToString("N")}";
     }
 
     internal void MakeParameters(string[] s) {
@@ -56,6 +85,7 @@ namespace Me.Aonodensetsu.Stitch {
       var positive = GetOrCreateClip(a.result, 100f);
 
       var plus = root.CreateBlendTreeChild(0);
+      plus.name = $"{a.result} = {a.left} + {a.right}";
       plus.blendType = BlendTreeType.Direct;
 
       var secondary = plus.CreateBlendTreeChild(0);
@@ -81,6 +111,7 @@ namespace Me.Aonodensetsu.Stitch {
       var zero = GetOrCreateClip(a.result);
 
       var and = root.CreateBlendTreeChild(0);
+      and.name = $"{a.result} = {a.left} ∧ {a.right}";
       and.blendParameter = a.left;
       and.AddChild(zero);
 
@@ -91,9 +122,11 @@ namespace Me.Aonodensetsu.Stitch {
     }
 
     public void Stitch(DefaultAction a) {
-      var parameter = Controller.parameters.FirstOrDefault(p => p.name == a.result);
+      var parameters = Controller.parameters;
+      var parameter = parameters.FirstOrDefault(p => p.name == a.result);
       if (parameter != null) {
         parameter.defaultFloat = a.value;
+        Controller.parameters = parameters;
         return;
       }
 
@@ -109,6 +142,7 @@ namespace Me.Aonodensetsu.Stitch {
       MakeParameters(new[] { a.result, a.left, a.right });
 
       var gate = root.CreateBlendTreeChild(0);
+      gate.name = $"{a.result} = Gate {a.left} {a.right}";
       gate.blendParameter = a.left;
 
       var secondary = gate.CreateBlendTreeChild(0);
@@ -122,11 +156,9 @@ namespace Me.Aonodensetsu.Stitch {
       tertiary.AddChild(GetOrCreateClip(a.result, a.oneOne));
     }
 
-    #if HAS_VF || HAS_MA
     public void Stitch(GlobalAction a) {
       MakeParameters(new[] { a.result });
     }
-    #endif
 
     public void Stitch(MultiplyAction a) {
       BlendTree root = GetRoot();
@@ -134,6 +166,7 @@ namespace Me.Aonodensetsu.Stitch {
       var zero = GetOrCreateClip(a.result);
 
       var times = root.CreateBlendTreeChild(0);
+      times.name = $"{a.result} = {a.left} * {a.right}";
       times.blendParameter = a.left;
       times.maxThreshold = 10;
       times.AddChild(zero);
@@ -150,6 +183,7 @@ namespace Me.Aonodensetsu.Stitch {
       MakeParameters(new[] { a.result, a.value });
 
       var not = root.CreateBlendTreeChild(0);
+      not.name = $"{a.result} = ¬ {a.value}";
       not.blendParameter = a.value;
       not.AddChild(GetOrCreateClip(a.result, 1f));
       not.AddChild(GetOrCreateClip(a.result));
@@ -161,6 +195,7 @@ namespace Me.Aonodensetsu.Stitch {
       var one = GetOrCreateClip(a.result, 1f);
 
       var or = root.CreateBlendTreeChild(0);
+      or.name = $"{a.result} = {a.left} ∨ {a.right}";
       or.blendParameter = a.left;
 
       var secondary = or.CreateBlendTreeChild(0);
@@ -176,6 +211,7 @@ namespace Me.Aonodensetsu.Stitch {
       MakeParameters(new[] { a.result, a.value });
 
       var remap = root.CreateBlendTreeChild(0);
+      remap.name = $"{a.result} = Remap {a.value} ({a.lowIn}-{a.highIn} -> {a.lowOut}-{a.highOut})";
       remap.blendParameter = a.value;
       remap.minThreshold = a.lowIn;
       remap.maxThreshold = a.highIn;
@@ -205,6 +241,7 @@ namespace Me.Aonodensetsu.Stitch {
 
       switch (a.type) {
         case SmoothAction.SmoothType.Exponential:
+          smooth.name = $"{a.result} = Smooth {a.value} EXP {a.delta}";
           smooth.blendParameter = delta;
 
           secondary.AddChild(negative);
@@ -214,6 +251,7 @@ namespace Me.Aonodensetsu.Stitch {
           tertiary.AddChild(positive);
           break;
         case SmoothAction.SmoothType.Linear:
+          smooth.name = $"{a.result} = Smooth {a.value} LIN {a.delta}";
           smooth.blendType = BlendTreeType.Direct;
 
           var r = InternParam();
@@ -254,6 +292,7 @@ namespace Me.Aonodensetsu.Stitch {
       var positive = GetOrCreateClip(a.result, 100f);
 
       var minus = root.CreateBlendTreeChild(0);
+      minus.name = $"{a.result} = {a.left} - {a.right}";
       minus.blendType = BlendTreeType.Direct;
 
       var secondary = minus.CreateBlendTreeChild(0);
@@ -280,9 +319,7 @@ namespace Me.Aonodensetsu.Stitch {
         case AndAction and: Stitch(and); break;
         case DefaultAction def: Stitch(def); break;
         case GateAction g: Stitch(g); break;
-        #if HAS_VF || HAS_MA
         case GlobalAction glo: Stitch(glo); break;
-        #endif
         case MultiplyAction mul: Stitch(mul); break;
         case NotAction not: Stitch(not); break;
         case OrAction or: Stitch(or); break;
