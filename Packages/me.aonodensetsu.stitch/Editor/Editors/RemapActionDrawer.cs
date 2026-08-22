@@ -71,6 +71,7 @@ namespace Me.Aonodensetsu.Stitch {
       highOut.floatValue = EditorGUI.FloatField(highOutRect, highOut.floatValue);
 
       if (highIn.floatValue <= lowIn.floatValue) EditorGUI.DrawRect(new Rect(highInRect.x, highInRect.y, 1f, highInRect.height), Color.yellow);
+      if (highOut.floatValue == lowOut.floatValue) EditorGUI.DrawRect(new Rect(highOutRect.x, highOutRect.y, 1f, highOutRect.height), Color.yellow);
     }
   }
 }

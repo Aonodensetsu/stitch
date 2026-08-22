@@ -3,7 +3,7 @@
 ### Controller Logic Helper for Parameter Interactions
 
 Stitch is a tool inspired by VRCFury (and integrating with it or Modular Avatar) that aims at the place VRCFury deliberately excludes from its scope - Controllers.  
-Stitch can be used without VRCFury or Modular Avatar installed, but works better (automatically) alongside them.
+Stitch requires VRCFury or Modular Avatar to be installed.
 
 ### Usage
 
@@ -15,12 +15,8 @@ Stitch shows up as a simple menu with a list where you can add Actions.
 
 ![component view](media/stitch.png)
 
-In the case VRCFury or Modular Avatar are not installed, after setting up Stitch, click Build & Test (or Build & Publish) in the VRChat SDK panel at which time Stitch will create a prefab with instructions to manually add the resulting controller to your avatar in whichever way you usually do it. The manual deployment method is not recommended, but included for completeness.
-
-![manual usage reminder](media/reminder.png)
-
 <details>
-<summary><h2>Actions</h2></summary>
+<summary><h3>Actions</h3></summary>
 
 Technically, Stitch is a UI for [Advanced BlendTree Techniques](https://vrc.school/docs/Other/Advanced-BlendTrees).  
 The created parameters are [AAPs](https://vrc.school/docs/Other/AAPs).  
@@ -65,12 +61,12 @@ The above gates are used commonly enough they have their own more optimized acti
 01 - Left input is zero, right input is one.  
 eg.
 
-### Global (VF, MA)
+### Global
 
 ![global action](media/global.png)
 
-The Global action sets a parameter as Global in the Full Controller created by Stitch.  
-By default, Stitch will use the features of VRCFury or Modular Avatar to prevent conflicts between parameters created through other means.  
+The Global action sets a parameter as Global in the controller created by Stitch.  
+By default, Stitch will use the features of VRCFury or Modular Avatar to prevent conflicts between parameters.  
 Use this action when a parameter needs to be shared between different setups.
 
 ### Multiply [×]
@@ -103,7 +99,9 @@ The input value is restricted in the range 0 to 1.
 ![remap action](media/remap.png)
 
 The Remap action allows modifying the range of values a parameter takes on.  
-The output takes on a value based on the percentage along the input range.
+The output takes on a value based on the percentage along the input range.  
+The input range must be written in ascending order (second input larger than first).  
+The output range must not be length zero (fourth input different from third).
 
 For example, a remap of 0-1 to 2-0 will change values: 0 -> 2, 0.1 -> 1.8, 0.2 -> 1.6, 0.9 -> 0.2.
 
@@ -125,6 +123,12 @@ This is equivalent to the Add action with the second parameter negated.
 For the mathematical actions, either parameter input can be replaced with a number - that number will be treated as a constant.
 
 </details>
+
+In the case VRCFury or Modular Avatar are not installed, after setting up Stitch, clicking Build & Test (or Build & Publish) in the VRChat SDK panel will create a prefab with instructions to install one of the dependencies.  
+Clicking on either button will try to install the selected dependency in VCC.  
+A similar error message is also displayed on the Stitch components.
+
+![manual usage reminder](media/reminder.png)
 
 Repo templated from https://github.com/vrchat-community/template-package.
 

@@ -1,10 +1,12 @@
 {
   "support.description": "Create blend tree logic using a simple user interface rather than connecting animator states!\n\nType in parameters for Stitch to join together using common logical or mathematical operations. A controller will be created.\n\nYellow highlights show disallowed values. In mathematical operations, numbers typed in instead of parameters will be used as constants.\nCheck https://vrc.school/docs/Other/Advanced-BlendTrees (as well as the AAP page) for restrictions.",
-  "support.manualPublish": "Stitch can integrate with other packages to deploy its changes automatically (VRCFury or Modular Avatar) in a non-destructive way, which is strongly recommended. Supported tools were not detected, so you should install one, or manually add the generated controller to your avatar.\n\nAs long as this instruction exists at its current location, Stitch will not recreate temporary assets, meaning no changes to Stitch components will be detected - but you will be able to use the generated controller without it being destroyed each build. To let Stitch run again, delete this prefab.\n\nYou may need to unhide Packages to be able click the link to the controller.",
   "support.addAction": "+",
   "support.removeAction": "-",
-  "support.controller": "Controller (clickable)",
-  "general.manualFlag": "STITCH_PUBLISH_REMINDER",
+  "support.menuMissingTools": "Stitch will not do anything without VRCFury or Modular Avatar installed.",
+  "support.manualFlag": "STITCH_INSTRUCTIONS",
+  "support.missingTools": "Stitch has to integrate with another package to deploy its changes automatically in a non-destructive way.\n\nNone of the supported packages were detected, so you should install one.",
+  "support.VF": "Install VRCFury",
+  "support.MA": "Install Modular Avatar",
   "general.equal": "=",
   "general.defaultTo": "to",
   "general.remapDash": "–",
@@ -26,7 +28,7 @@
   "action.add": "+",
   "action.subtract": "−",
   "action.multiply": "×",
-  "log.noRebuild": "No supported auto-publishing method found, not rebuilding to allow for manual deployment.",
-  "log.manualPublish": "No supported auto-publishing method found in project, deploy the controller manually.",
+  "log.noRebuild": "No supported auto-publishing method found and instructions already created, skipping.",
+  "log.createInstruction": "No supported auto-publishing method found, creating instruction message.",
   "log.invalidAction": "Invalid action, skipped."
 }

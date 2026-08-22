@@ -2,6 +2,4 @@ vpm-manifest.json
 package-lock.json
 /*/
 !me.aonodensetsu.stitch
-me.aonodensetsu.stitch/Temp/*
-!me.aonodensetsu.stitch/Temp/.gitkeep
 

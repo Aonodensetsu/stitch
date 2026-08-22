@@ -12,31 +12,27 @@ using com.vrcfury.api;
 using nadena.dev.modular_avatar.core;
 #endif
 
-
 namespace Me.Aonodensetsu.Stitch {
   internal interface Publisher {
     void Publish(GameObject obj, AnimatorController controller, List<string> globals);
   }
 
   internal class InstructionPublisher : Publisher {
-    internal string flagPath = $"Assets/{Strings.Get("general.manualFlag")}.prefab";
-
-    public GameObject FlagObj() {
-      return AssetDatabase.LoadAssetAtPath<GameObject>(flagPath);
-    }
-
-    public void Publish(GameObject obj, AnimatorController controller, List<string> globals = null) {
-      var flag = FlagObj();
-      if (flag == null) {
-        obj.tag = "EditorOnly";
-        UnityEditorInternal.InternalEditorUtility.SetIsInspectorExpanded(obj.transform, false);
-
-        var component = obj.AddComponent<StitchPublishReminder>();
-        component.controller = controller;
-        var asset = PrefabUtility.SaveAsPrefabAsset(obj, flagPath);
-
-        Debug.LogError($"Stitch: {Strings.Get("log.manualPublish")}", asset);
+    public void Publish(GameObject obj, AnimatorController controller = null, List<string> globals = null) {
+      var flagPath = $"Assets/{Strings.Get("support.manualFlag")}.prefab";
+      var flag = AssetDatabase.LoadAssetAtPath<GameObject>(flagPath);
+      if (flag != null) {
+        Debug.LogError($"Stitch: {Strings.Get("log.noRebuild")}", flag);
+        return;
       }
+      var msg = new GameObject("Stitch");
+      msg.transform.parent = obj.transform;
+      msg.tag = "EditorOnly";
+      UnityEditorInternal.InternalEditorUtility.SetIsInspectorExpanded(msg.transform, false);
+      msg.AddComponent<StitchInstruction>();
+
+      var asset = PrefabUtility.SaveAsPrefabAsset(msg, flagPath);
+      Debug.LogError($"Stitch: {Strings.Get("log.createInstruction")}", asset);
     }
   }
 
@@ -65,10 +61,9 @@ namespace Me.Aonodensetsu.Stitch {
           saved = false
         })
       );
-      var mc = obj.AddComponent<ModularAvatarMergeAnimator>();
-      mc.animator = controller;
-      mc.matchAvatarWriteDefaults = true;
-      mc.deleteAttachedAnimator = true;
+
+      var mm = obj.AddComponent<ModularAvatarMergeBlendTree>();
+      mm.Motion = controller.layers[0].stateMachine.states[0].state.motion;
     }
   }
   #endif
