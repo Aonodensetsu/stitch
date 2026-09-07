@@ -7,7 +7,7 @@ namespace Me.Aonodensetsu.Stitch {
     public string result;
 
     public virtual bool Validate() {
-      return !float.TryParse(result, out _);
+      return !string.IsNullOrEmpty(result) && !float.TryParse(result, out _);
     }
   }
 }

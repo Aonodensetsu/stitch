@@ -1,3 +1,16 @@
+2.1.0:
+The UX update.
+- made everything internal, if a public API is ever requested things will be exposed deliberately
+- removed the f suffix where floats are inferred
+- renamed BaseActionDrawer to ActionDrawer for consistency
+- rewritten the UI in UI Toolkit instead of IMGUI
+  - also with more inheritance and consistency
+- using the GameObject ID instead of trying to keep track of unique IDs myself
+- the animator layer is named again, even though it will get merged, if something breaks with the merging it will be identifiable
+- categorized the actions
+- changed the property in ActionAttribute into a variable
+- fixed some actions' validation (oops)
+
 2.0.0:
 - VRCFury or Modular Avatar are now required
   - this is because I properly fixed namespacing issues by separating the resulting tree based on where the components are in the avatar - like MA or VF do too

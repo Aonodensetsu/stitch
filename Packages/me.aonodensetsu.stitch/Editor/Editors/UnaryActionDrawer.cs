@@ -1,42 +1,36 @@
+using UnityEditor.UIElements;
 using UnityEditor;
+using UnityEngine.UIElements;
 using UnityEngine;
+using System;
 
 namespace Me.Aonodensetsu.Stitch {
   [CustomPropertyDrawer(typeof(UnaryAction), true)]
-  internal class UnaryActionDrawer : BaseActionDrawer {
-    public override void OnGUI(Rect rect, SerializedProperty property, GUIContent label) {
-      base.OnGUI(rect, property, label);
+  internal class UnaryActionDrawer : ActionDrawer {
+    internal SerializedProperty value;
 
-      var result = property.FindPropertyRelative("result");
-      var value = property.FindPropertyRelative("value");
-      string equalsName = Strings.Get("general.equal");
-      string actionName = GetActionName(property);
+    internal virtual bool ValueValidate() => !string.IsNullOrEmpty(value.stringValue);
 
-      const float spacing = 4f;
+    public override VisualElement CreatePropertyGUI(SerializedProperty property) {
+      value = property.FindPropertyRelative("value");
 
-      float equalsWidth = boldCenter.CalcSize(new GUIContent(equalsName)).x;
-      float actionWidth = boldCenter.CalcSize(new GUIContent(actionName)).x;
-      float availableWidth = rect.width - equalsWidth - actionWidth - spacing * 3f;
-      float fieldWidth = availableWidth / 2f;
-      float y = rect.y + 2f;
-      float h = EditorGUIUtility.singleLineHeight;
+      var root = base.CreatePropertyGUI(property);
+      root.ElementAt(1).style.marginRight = 6 + StitchMenuEditor.Margin;
 
-      var resultRect = new Rect(rect.x, y, fieldWidth, h);
-      var equalsRect = new Rect(resultRect.xMax + spacing, y, equalsWidth, h);
-      var actionRect = new Rect(equalsRect.xMax + spacing, y, actionWidth, h);
-      var valueRect = new Rect(actionRect.xMax + spacing, y, fieldWidth, h);
+      root.Add(new Label(Strings.Get("general.equal")) {
+        style = {
+          marginRight = StitchMenuEditor.Margin,
+          unityTextAlign = TextAnchor.MiddleCenter
+        }
+      });
 
-      result.stringValue = EditorGUI.TextField(resultRect, result.stringValue);
-      EditorGUI.LabelField(equalsRect, equalsName, boldCenter);
-      EditorGUI.LabelField(actionRect, actionName, boldCenter);
-      value.stringValue = EditorGUI.TextField(valueRect, value.stringValue);
+      root.Add(root.ElementAt(0));
 
-      if (string.IsNullOrWhiteSpace(result.stringValue) || float.TryParse(result.stringValue, out _)) EditorGUI.DrawRect(new Rect(resultRect.x, resultRect.y, 1f, resultRect.height), Color.yellow);
-      InheritedHighlight(value, valueRect);
-    }
+      var valueField = new PropertyField(value, "") { style = { flexGrow = 1 } };
+      root.Add(valueField);
 
-    internal virtual void InheritedHighlight(SerializedProperty value, Rect valueRect) {
-      if (string.IsNullOrWhiteSpace(value.stringValue)) EditorGUI.DrawRect(new Rect(valueRect.x, valueRect.y, 1f, valueRect.height), Color.yellow);
+      ValidateProperty(valueField, ValueValidate);
+      return root;
     }
   }
 }

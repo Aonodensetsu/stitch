@@ -10,11 +10,11 @@ namespace Me.Aonodensetsu.Stitch {
       Linear = 1
     };
 
-    public float delta;
     public SmoothType type;
+    public float delta;
 
     public override bool Validate() {
-      return !float.TryParse(result, out _) && !float.TryParse(value, out _) && delta > 0f && delta < 1f;
+      return base.Validate() && delta > 0 && delta < 1;
     }
   }
 }

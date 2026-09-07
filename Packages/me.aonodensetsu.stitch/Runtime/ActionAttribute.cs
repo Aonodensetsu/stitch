@@ -2,11 +2,11 @@ using System;
 
 namespace Me.Aonodensetsu.Stitch {
   [AttributeUsage(AttributeTargets.Class, Inherited = false)]
-  public sealed class ActionAttribute : Attribute {
-    public string LocalizationKey { get; }
+  internal class ActionAttribute : Attribute {
+    public string LocalizationKey;
 
-    public ActionAttribute(string localizationKey) {
-      LocalizationKey = localizationKey;
+    public ActionAttribute(string l18nKey) {
+      LocalizationKey = l18nKey;
     }
   }
 }

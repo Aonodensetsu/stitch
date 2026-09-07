@@ -9,14 +9,15 @@ using System;
 
 namespace Me.Aonodensetsu.Stitch {
   internal class Hook : IVRCSDKPreprocessAvatarCallback {
-    public int callbackOrder => -19742;
     #if HAS_VF
-    public static Publisher publisher = new VRCFuryPublisher();
+    internal static Publisher publisher = new VRCFuryPublisher();
     #elif HAS_MA
-    public static Publisher publisher = new ModularAvatarPublisher();
+    internal static Publisher publisher = new ModularAvatarPublisher();
     #else
-    public static Publisher publisher = new InstructionPublisher();
+    internal static Publisher publisher = new InstructionPublisher();
     #endif
+
+    public int callbackOrder => -19742;
 
     public bool OnPreprocessAvatar(GameObject avatar) {
       if (publisher is InstructionPublisher p) {
@@ -29,17 +30,19 @@ namespace Me.Aonodensetsu.Stitch {
         .GroupBy(c => c.gameObject)
         .Select(g => ( obj: g.Key, actions: g.SelectMany(c => c.actions) ))
       ) {
+        var id = Math.Abs(obj.GetInstanceID()).ToString("X");
         var f = obj.GetComponentsInChildren<StitchMenu>().First();
         var controller = new AnimatorController();
         var act = new Actions(controller);
         var globals = new List<string>();
 
         controller.AddLayer(new AnimatorControllerLayer {
-          stateMachine = new AnimatorStateMachine()
+          stateMachine = new AnimatorStateMachine(),
+          name = $"Stitch_{id}"
         });
-        act.Stitch(new DefaultAction { result = "1", value = 1 });
+        act.Stitch(new DefaultAction { result = "1", value = "1" });
 
-        controller.CreateBlendTreeInController($"Stitch_{f.id}", out var tree);
+        controller.CreateBlendTreeInController($"Stitch_{id}", out var tree);
         tree.blendType = BlendTreeType.Direct;
         foreach (var action in actions) {
           if (!action.Validate()) {

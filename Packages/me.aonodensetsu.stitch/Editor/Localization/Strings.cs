@@ -10,11 +10,12 @@ namespace Me.Aonodensetsu.Stitch {
     private static Dictionary<string,string> _tl;
 
     private static Dictionary<string,string> LoadTL() {
-      string language = CultureInfo.CurrentUICulture.TwoLetterISOLanguageName.ToLowerInvariant();
-      string enpath = Path.GetFullPath("Packages/me.aonodensetsu.stitch/Editor/Localization/en.json");
+      var language = CultureInfo.CurrentUICulture.TwoLetterISOLanguageName.ToLowerInvariant();
+      var enpath = Path.GetFullPath("Packages/me.aonodensetsu.stitch/Editor/Localization/en.json");
       var tl = JsonConvert.DeserializeObject<Dictionary<string,string>>(File.ReadAllText(enpath)) ?? new Dictionary<string, string>();
+
       if (language != "en") {
-        string langpath = Path.GetFullPath($"Packages/me.aonodensetsu.stitch/Editor/Localization/{language}.json");
+        var langpath = Path.GetFullPath($"Packages/me.aonodensetsu.stitch/Editor/Localization/{language}.json");
         var lang = JsonConvert.DeserializeObject<Dictionary<string,string>>(File.ReadAllText(langpath)) ?? new Dictionary<string, string>();
         foreach (var pair in lang) tl[pair.Key] = pair.Value;
       }

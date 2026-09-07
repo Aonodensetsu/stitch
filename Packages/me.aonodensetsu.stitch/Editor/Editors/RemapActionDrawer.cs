@@ -1,77 +1,79 @@
+using UnityEditor.UIElements;
 using UnityEditor;
+using UnityEngine.UIElements;
 using UnityEngine;
+using System;
 
 namespace Me.Aonodensetsu.Stitch {
   [CustomPropertyDrawer(typeof(RemapAction), true)]
-  internal class RemapActionDrawer : BaseActionDrawer {
-    public override float GetPropertyHeight(SerializedProperty property, GUIContent label) {
-      return EditorGUIUtility.singleLineHeight * 2f + 2f;
-    }
+  internal class RemapActionDrawer : UnaryActionDrawer {
+    internal SerializedProperty lowIn;
+    internal SerializedProperty lowOut;
+    internal SerializedProperty highIn;
+    internal SerializedProperty highOut;
 
-    public override void OnGUI(Rect rect, SerializedProperty property, GUIContent label) {
-      base.OnGUI(rect, property, label);
+    internal override bool ValueValidate() => base.ValueValidate() && !float.TryParse(value.stringValue, out _);
+    internal virtual bool HighInValidate() => highIn.floatValue > lowIn.floatValue;
+    internal virtual bool HighOutValidate() => highOut.floatValue != lowOut.floatValue;
 
-      var result = property.FindPropertyRelative("result");
-      var value = property.FindPropertyRelative("value");
-      string equalsName = Strings.Get("general.equal");
-      string actionName = GetActionName(property);
+    public override VisualElement CreatePropertyGUI(SerializedProperty property) {
+      lowIn = property.FindPropertyRelative("lowIn");
+      highIn = property.FindPropertyRelative("highIn");
+      lowOut = property.FindPropertyRelative("lowOut");
+      highOut = property.FindPropertyRelative("highOut");
 
-      const float spacing = 4f;
+      var root = new VisualElement();
 
-      float equalsWidth = boldCenter.CalcSize(new GUIContent(equalsName)).x;
-      float actionWidth = boldCenter.CalcSize(new GUIContent(actionName)).x;
-      float availableWidth = rect.width - equalsWidth - actionWidth - spacing * 3f;
-      float fieldWidth = availableWidth / 2f;
-      float y = rect.y + 2f;
-      float h = EditorGUIUtility.singleLineHeight;
+      root.Add(base.CreatePropertyGUI(property));
 
-      var resultRect = new Rect(rect.x, y, fieldWidth, h);
-      var equalsRect = new Rect(resultRect.xMax + spacing, y, equalsWidth, h);
-      var actionRect = new Rect(equalsRect.xMax + spacing, y, actionWidth, h);
-      var valueRect = new Rect(actionRect.xMax + spacing, y, fieldWidth, h);
+      var lineTwo = new VisualElement {
+        style = {
+          flexDirection = FlexDirection.Row,
+          alignItems = Align.Center,
+          marginTop = StitchMenuEditor.Margin
+        }
+      };
+      root.Add(lineTwo);
 
-      result.stringValue = EditorGUI.TextField(resultRect, result.stringValue);
-      EditorGUI.LabelField(equalsRect, equalsName, boldCenter);
-      EditorGUI.LabelField(actionRect, actionName, boldCenter);
-      value.stringValue = EditorGUI.TextField(valueRect, value.stringValue);
+      lineTwo.Add(new PropertyField(lowIn, "") {
+        style = {
+          flexGrow = 1,
+          marginRight = 6 + StitchMenuEditor.Margin
+        }
+      });
+      lineTwo.Add(new Label(Strings.Get("general.remapDash")));
 
-      if (string.IsNullOrWhiteSpace(result.stringValue) || float.TryParse(result.stringValue, out _)) EditorGUI.DrawRect(new Rect(resultRect.x, resultRect.y, 1f, resultRect.height), Color.yellow);
-      if (string.IsNullOrWhiteSpace(value.stringValue) || float.TryParse(value.stringValue, out _)) EditorGUI.DrawRect(new Rect(valueRect.x, valueRect.y, 1f, valueRect.height), Color.yellow);
+      var highInProp = new PropertyField(highIn, "") {
+        style = {
+          flexGrow = 1,
+          marginLeft = StitchMenuEditor.Margin,
+          marginRight = 6 + StitchMenuEditor.Margin
+        }
+      };
+      lineTwo.Add(highInProp);
 
-      // second line
-      var lowIn = property.FindPropertyRelative("lowIn");
-      var highIn = property.FindPropertyRelative("highIn");
-      var lowOut = property.FindPropertyRelative("lowOut");
-      var highOut = property.FindPropertyRelative("highOut");
+      lineTwo.Add(new Label(Strings.Get("general.remapTo")));
 
-      y += h + 2f;
-      string dash = Strings.Get("general.remapDash");
-      string to = Strings.Get("general.remapTo");
+      lineTwo.Add(new PropertyField(lowOut, "") {
+        style = {
+          flexGrow = 1,
+          marginLeft = StitchMenuEditor.Margin,
+          marginRight = 6 + StitchMenuEditor.Margin
+        }
+      });
+      lineTwo.Add(new Label(Strings.Get("general.remapDash")));
 
-      float dashWidth = boldCenter.CalcSize(new GUIContent(dash)).x;
-      float toWidth = boldCenter.CalcSize(new GUIContent(to)).x;
+      var highOutProp = new PropertyField(highOut, "") {
+        style = {
+          flexGrow = 1,
+          marginLeft = StitchMenuEditor.Margin
+        }
+      };
+      lineTwo.Add(highOutProp);
 
-      float availableWidth2 = rect.width - dashWidth - dashWidth - toWidth - spacing * 6f;
-      float fieldWidth2 = availableWidth2 / 4f;
-
-      var lowInRect = new Rect(rect.x, y, fieldWidth2, h);
-      var dashRect = new Rect(lowInRect.xMax + spacing, y, dashWidth, h);
-      var highInRect = new Rect(dashRect.xMax + spacing, y, fieldWidth2, h);
-      var toRect = new Rect(highInRect.xMax + spacing, y, toWidth, h);
-      var lowOutRect = new Rect(toRect.xMax + spacing, y, fieldWidth2, h);
-      var dashOutRect = new Rect(lowOutRect.xMax + spacing, y, dashWidth, h);
-      var highOutRect = new Rect(dashOutRect.xMax + spacing, y, fieldWidth2, h);
-
-      lowIn.floatValue = EditorGUI.FloatField(lowInRect, lowIn.floatValue);
-      EditorGUI.LabelField(dashRect, dash, boldCenter);
-      highIn.floatValue = EditorGUI.FloatField(highInRect, highIn.floatValue);
-      EditorGUI.LabelField(toRect, to, boldCenter);
-      lowOut.floatValue = EditorGUI.FloatField(lowOutRect, lowOut.floatValue);
-      EditorGUI.LabelField(dashOutRect, dash, boldCenter);
-      highOut.floatValue = EditorGUI.FloatField(highOutRect, highOut.floatValue);
-
-      if (highIn.floatValue <= lowIn.floatValue) EditorGUI.DrawRect(new Rect(highInRect.x, highInRect.y, 1f, highInRect.height), Color.yellow);
-      if (highOut.floatValue == lowOut.floatValue) EditorGUI.DrawRect(new Rect(highOutRect.x, highOutRect.y, 1f, highOutRect.height), Color.yellow);
+      ValidateProperty(highInProp, HighInValidate);
+      ValidateProperty(highOutProp, HighOutValidate);
+      return root;
     }
   }
 }

@@ -1,29 +1,36 @@
-using UnityEditor.Animations;
+using UnityEditor.UIElements;
 using UnityEditor;
+using UnityEngine.UIElements;
 using UnityEngine;
 
 namespace Me.Aonodensetsu.Stitch {
   [CustomEditor(typeof(StitchInstruction))]
   internal class StitchInstructionEditor : Editor {
-    private GUIStyle desc;
-
-    public override void OnInspectorGUI() {
-      desc ??= new GUIStyle(EditorStyles.label) {
-        fontSize = 13,
-        wordWrap = true,
-        richText = true
+    internal void mkLinkBtn(string text, string url, VisualElement parent) {
+      var btn = new Button {
+        text = text,
+        style = {
+          minHeight = 24,
+          flexGrow = 1
+        }
       };
+      parent.Add(btn);
 
-      EditorGUILayout.LabelField(Strings.Get("support.missingTools"), desc);
-      EditorGUILayout.Space(4);
-      using (new EditorGUILayout.HorizontalScope()) {
-        if (GUILayout.Button(Strings.Get("support.VF"))) {
-          Application.OpenURL("vcc://vpm/addRepo?url=https%3A%2F%2Fvcc.vrcfury.com");
-        }
-        if (GUILayout.Button(Strings.Get("support.MA"))) {
-          Application.OpenURL("vcc://vpm/addRepo?url=https://vpm.nadena.dev/vpm.json");
-        }
-      }
+      btn.clicked += () => {
+        Application.OpenURL(url);
+      };
+    }
+
+    public override VisualElement CreateInspectorGUI() {
+      var root = new VisualElement();
+
+      StitchMenuEditor.mkDescription(Strings.Get("support.missingTools"), root);
+      var toolbar = StitchMenuEditor.mkToolbar(root);
+
+      mkLinkBtn(Strings.Get("support.VF"), "vcc://vpm/addRepo?url=https://vcc.vrcfury.com", toolbar);
+      mkLinkBtn(Strings.Get("support.MA"), "vcc://vpm/addRepo?url=https://vpm.nadena.dev/vpm.json", toolbar);
+
+      return root;
     }
   }
 }

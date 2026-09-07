@@ -10,7 +10,7 @@ namespace Me.Aonodensetsu.Stitch {
     private AnimatorController Controller;
     private readonly Dictionary<(string name, float value), AnimationClip> clips = new();
 
-    public static readonly HashSet<string> VRCGlobals = new HashSet<string> {
+    internal static readonly HashSet<string> VRCGlobals = new HashSet<string> {
       "IsLocal",
       "PreviewMode",
       "Viseme",
@@ -43,29 +43,24 @@ namespace Me.Aonodensetsu.Stitch {
       "EyeHeightAsPercent"
     };
 
-    public Actions(AnimatorController controller) {
+    internal Actions(AnimatorController controller) {
       Controller = controller;
     }
 
-    internal BlendTree GetRoot() {
-      return (BlendTree)Controller.layers[0].stateMachine.states[0].state.motion;
-    }
+    internal BlendTree GetRoot() => (BlendTree)Controller.layers[0].stateMachine.states[0].state.motion;
+    internal string InternParam() => $"StitchInternal_{Guid.NewGuid().ToString("N")}";
 
-    internal AnimationClip GetOrCreateClip(string name, float value = 0f) {
+    internal AnimationClip GetOrCreateClip(string name, float value = 0) {
       var key = (name, value);
       if (clips.TryGetValue(key, out var clip)) return clip;
-      clip = new AnimationClip { name = $"{name}_{value}", frameRate = 60f };
+      clip = new AnimationClip { name = $"{name}_{value}", frameRate = 60 };
       AnimationUtility.SetEditorCurve(
         clip,
         EditorCurveBinding.FloatCurve("", typeof(Animator), name),
-        new AnimationCurve(new Keyframe(0f, value), new Keyframe(1f / 60f, value))
+        new AnimationCurve(new Keyframe(0, value), new Keyframe(1 / 60, value))
       );
       clips.Add(key, clip);
       return clip;
-    }
-
-    internal string InternParam() {
-      return $"StitchInternal_{Guid.NewGuid().ToString("N")}";
     }
 
     internal void MakeParameters(string[] s) {
@@ -73,16 +68,16 @@ namespace Me.Aonodensetsu.Stitch {
         if (!Controller.parameters.Any(p => p.name == param)) Controller.AddParameter(new AnimatorControllerParameter {
           name = param,
           type = AnimatorControllerParameterType.Float,
-          defaultFloat = float.TryParse(param, out float val) ? val : 0f
+          defaultFloat = float.TryParse(param, out float val) ? val : 0
         });
       }
     }
 
-    public void Stitch(AddAction a) {
+    internal void Stitch(AddAction a) {
       BlendTree root = GetRoot();
       MakeParameters(new[] { a.result, a.left, a.right });
-      var negative = GetOrCreateClip(a.result, -100f);
-      var positive = GetOrCreateClip(a.result, 100f);
+      var negative = GetOrCreateClip(a.result, -100);
+      var positive = GetOrCreateClip(a.result, 100);
 
       var plus = root.CreateBlendTreeChild(0);
       plus.name = $"{a.result} = {a.left} + {a.right}";
@@ -105,7 +100,7 @@ namespace Me.Aonodensetsu.Stitch {
       plus.children = plus.children.Select(c => { c.directBlendParameter = "1"; return c; }).ToArray();
     }
 
-    public void Stitch(AndAction a) {
+    internal void Stitch(AndAction a) {
       BlendTree root = GetRoot();
       MakeParameters(new[] { a.result, a.left, a.right });
       var zero = GetOrCreateClip(a.result);
@@ -118,26 +113,19 @@ namespace Me.Aonodensetsu.Stitch {
       var secondary = and.CreateBlendTreeChild(1);
       secondary.blendParameter = a.right;
       secondary.AddChild(zero);
-      secondary.AddChild(GetOrCreateClip(a.result, 1f));
+      secondary.AddChild(GetOrCreateClip(a.result, 1));
     }
 
-    public void Stitch(DefaultAction a) {
+    internal void Stitch(DefaultAction a) {
+      MakeParameters(new[] { a.result });
       var parameters = Controller.parameters;
       var parameter = parameters.FirstOrDefault(p => p.name == a.result);
-      if (parameter != null) {
-        parameter.defaultFloat = a.value;
-        Controller.parameters = parameters;
-        return;
-      }
-
-      Controller.AddParameter(new AnimatorControllerParameter {
-        name = a.result,
-        type = AnimatorControllerParameterType.Float,
-        defaultFloat = a.value
-      });
+      float.TryParse(a.value, out var af);
+      parameter.defaultFloat = af;
+      Controller.parameters = parameters;
     }
 
-    public void Stitch(GateAction a) {
+    internal void Stitch(GateAction a) {
       BlendTree root = GetRoot();
       MakeParameters(new[] { a.result, a.left, a.right });
 
@@ -156,11 +144,11 @@ namespace Me.Aonodensetsu.Stitch {
       tertiary.AddChild(GetOrCreateClip(a.result, a.oneOne));
     }
 
-    public void Stitch(GlobalAction a) {
+    internal void Stitch(GlobalAction a) {
       MakeParameters(new[] { a.result });
     }
 
-    public void Stitch(MultiplyAction a) {
+    internal void Stitch(MultiplyAction a) {
       BlendTree root = GetRoot();
       MakeParameters(new[] { a.result, a.left, a.right });
       var zero = GetOrCreateClip(a.result);
@@ -175,24 +163,24 @@ namespace Me.Aonodensetsu.Stitch {
       secondary.blendParameter = a.right;
       secondary.maxThreshold = 10;
       secondary.AddChild(zero);
-      secondary.AddChild(GetOrCreateClip(a.result, 100f));
+      secondary.AddChild(GetOrCreateClip(a.result, 100));
     }
 
-    public void Stitch(NotAction a) {
+    internal void Stitch(NotAction a) {
       BlendTree root = GetRoot();
       MakeParameters(new[] { a.result, a.value });
 
       var not = root.CreateBlendTreeChild(0);
       not.name = $"{a.result} = ¬ {a.value}";
       not.blendParameter = a.value;
-      not.AddChild(GetOrCreateClip(a.result, 1f));
+      not.AddChild(GetOrCreateClip(a.result, 1));
       not.AddChild(GetOrCreateClip(a.result));
     }
 
-    public void Stitch(OrAction a) {
+    internal void Stitch(OrAction a) {
       BlendTree root = GetRoot();
       MakeParameters(new[] { a.result, a.left, a.right });
-      var one = GetOrCreateClip(a.result, 1f);
+      var one = GetOrCreateClip(a.result, 1);
 
       var or = root.CreateBlendTreeChild(0);
       or.name = $"{a.result} = {a.left} ∨ {a.right}";
@@ -206,7 +194,7 @@ namespace Me.Aonodensetsu.Stitch {
       or.AddChild(one);
     }
 
-    public void Stitch(RemapAction a) {
+    internal void Stitch(RemapAction a) {
       BlendTree root = GetRoot();
       MakeParameters(new[] { a.result, a.value });
 
@@ -219,24 +207,24 @@ namespace Me.Aonodensetsu.Stitch {
       remap.AddChild(GetOrCreateClip(a.result, a.highOut));
     }
 
-    public void Stitch(SmoothAction a) {
+    internal void Stitch(SmoothAction a) {
       BlendTree root = GetRoot();
-      string delta = a.delta.ToString();
+      var delta = a.delta.ToString();
       MakeParameters(new[] { a.result, a.value, delta });
 
-      var negative = GetOrCreateClip(a.result, -100f);
-      var positive = GetOrCreateClip(a.result, 100f);
+      var negative = GetOrCreateClip(a.result, -100);
+      var positive = GetOrCreateClip(a.result, 100);
 
       var smooth = root.CreateBlendTreeChild(0);
 
       var secondary = smooth.CreateBlendTreeChild(0);
-      secondary.minThreshold = -100f;
-      secondary.maxThreshold = 100f;
+      secondary.minThreshold = -100;
+      secondary.maxThreshold = 100;
       secondary.blendParameter = a.value;
 
       var tertiary = smooth.CreateBlendTreeChild(0);
-      tertiary.minThreshold = -100f;
-      tertiary.maxThreshold = 100f;
+      tertiary.minThreshold = -100;
+      tertiary.maxThreshold = 100;
       tertiary.blendParameter = a.result;
 
       switch (a.type) {
@@ -256,8 +244,8 @@ namespace Me.Aonodensetsu.Stitch {
 
           var r = InternParam();
           MakeParameters(new[] { r });
-          var negativer = GetOrCreateClip(r, -100f);
-          var positiver = GetOrCreateClip(r, 100f);
+          var negativer = GetOrCreateClip(r, -100);
+          var positiver = GetOrCreateClip(r, 100);
 
           secondary.AddChild(negativer);
           secondary.AddChild(positiver);
@@ -266,8 +254,8 @@ namespace Me.Aonodensetsu.Stitch {
           tertiary.AddChild(negativer);
 
           var quarternary = smooth.CreateBlendTreeChild(0);
-          quarternary.minThreshold = -100f;
-          quarternary.maxThreshold = 100f;
+          quarternary.minThreshold = -100;
+          quarternary.maxThreshold = 100;
           quarternary.blendParameter = a.result;
           quarternary.AddChild(negative);
           quarternary.AddChild(positive);
@@ -276,20 +264,20 @@ namespace Me.Aonodensetsu.Stitch {
           quinary.minThreshold = -0.1f;
           quinary.maxThreshold = 0.1f;
           quinary.blendParameter = r;
-          quinary.AddChild(GetOrCreateClip(a.result, -1f));
-          quinary.AddChild(GetOrCreateClip(a.result, 0f));
-          quinary.AddChild(GetOrCreateClip(a.result, 1f));
+          quinary.AddChild(GetOrCreateClip(a.result, -1));
+          quinary.AddChild(GetOrCreateClip(a.result, 0));
+          quinary.AddChild(GetOrCreateClip(a.result, 1));
 
           smooth.children = smooth.children.Select((c, ix) => { c.directBlendParameter = ix == 3 ? delta : "1"; return c; }).ToArray();
           break;
       }
     }
 
-    public void Stitch(SubtractAction a) {
+    internal void Stitch(SubtractAction a) {
       BlendTree root = GetRoot();
       MakeParameters(new[] { a.result, a.left, a.right });
-      var negative = GetOrCreateClip(a.result, -100f);
-      var positive = GetOrCreateClip(a.result, 100f);
+      var negative = GetOrCreateClip(a.result, -100);
+      var positive = GetOrCreateClip(a.result, 100);
 
       var minus = root.CreateBlendTreeChild(0);
       minus.name = $"{a.result} = {a.left} - {a.right}";
@@ -313,7 +301,7 @@ namespace Me.Aonodensetsu.Stitch {
     }
 
     // overload dispatcher
-    public void Stitch(Action a) {
+    internal void Stitch(Action a) {
       switch (a) {
         case AddAction add: Stitch(add); break;
         case AndAction and: Stitch(and); break;
