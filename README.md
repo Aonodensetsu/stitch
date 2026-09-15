@@ -101,6 +101,7 @@ The Compare actions provides common value comparisons between two values:
 - Less Than or Equal  
 - Equal  
 - Inequal  
+
 The comparisons have a tolerance of 1/140 (slightly less than VRChat's sync precision).  
 The input values are restricted in the range -100 to 100.  
 The output is on then the comparison is true.
@@ -109,7 +110,7 @@ The output is on then the comparison is true.
 
 ![maximum action](media/maximum.png)
 
-The Maxnimum action returns the larger of the inputs.  
+The Maximum action returns the larger of the inputs.  
 The input values are restricted in the range -100 to 100.  
 Either input (but not both) can be replaced with a constant number.
 
