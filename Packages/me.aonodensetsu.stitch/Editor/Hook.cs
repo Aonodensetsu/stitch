@@ -25,6 +25,8 @@ namespace Me.Aonodensetsu.Stitch {
         return true;
       }
 
+      var hasTimer = false;
+      var hasFrametime = false;
       foreach (var (obj, actions) in avatar
         .GetComponentsInChildren<StitchMenu>(true)
         .GroupBy(c => c.gameObject)
@@ -34,7 +36,8 @@ namespace Me.Aonodensetsu.Stitch {
         var f = obj.GetComponentsInChildren<StitchMenu>().First();
         var controller = new AnimatorController();
         var act = new Actions(controller);
-        var globals = new List<string>();
+        act.hasTimer = hasTimer;
+        act.hasFrametime = hasFrametime;
 
         controller.AddLayer(new AnimatorControllerLayer {
           stateMachine = new AnimatorStateMachine(),
@@ -49,14 +52,36 @@ namespace Me.Aonodensetsu.Stitch {
             Debug.LogWarning($"Stitch: {Strings.Get("log.invalidAction")}", obj);
             continue;
           }
-          if (action is GlobalAction) globals.Add(action.result);
-          act.Stitch(action);
+          act.Stitch((dynamic)action, tree);
         }
         tree.children = tree.children.Select(c => { c.directBlendParameter = "1"; return c; }).ToArray();
         foreach (var param in controller.parameters) {
-          if (Actions.VRCGlobals.Contains(param.name)) globals.Add(param.name);
+          if (Actions.VRCGlobals.Contains(param.name)) act.globals.Add(param.name);
         }
-        publisher.Publish(obj, controller, globals);
+
+        if (act.hasTimer && !hasTimer) {
+          var clip = new AnimationClip { name = "Stitch_Timer", frameRate = 60 };
+          var curve = new AnimationCurve(new Keyframe(0, 0), new Keyframe(1e5f, 1e5f));
+          for (int i = 0; i < curve.length; i++) {
+            AnimationUtility.SetKeyLeftTangentMode(curve, i, AnimationUtility.TangentMode.Linear);
+            AnimationUtility.SetKeyRightTangentMode(curve, i, AnimationUtility.TangentMode.Linear);
+          }
+          AnimationUtility.SetEditorCurve(clip, EditorCurveBinding.FloatCurve("", typeof(Animator), "Stitch_Timer"), curve);
+          var sett = AnimationUtility.GetAnimationClipSettings(clip);
+          sett.loopTime = true;
+          AnimationUtility.SetAnimationClipSettings(clip, sett);
+
+          var sm = new AnimatorStateMachine();
+          sm.AddState("Stitch_Timer").motion = clip;
+          controller.AddLayer(new AnimatorControllerLayer {
+            stateMachine = sm,
+            name = "Stitch_Timer"
+          });
+        }
+        hasFrametime = act.hasFrametime;
+        hasTimer = act.hasTimer;
+
+        publisher.Publish(obj, controller, act.globals.Distinct().ToList());
       }
       return true;
     }

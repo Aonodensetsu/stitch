@@ -22,6 +22,7 @@ namespace Me.Aonodensetsu.Stitch {
     internal void ValidateProperty(PropertyField prop, Func<bool> check) {
       prop.RegisterValueChangeCallback(e => {
         var t = prop.Q<VisualElement>("unity-text-input");
+        if (t == null) return;
         t.style.borderLeftColor = check() ? StyleKeyword.Null : Color.yellow;
         t.style.borderLeftWidth = 1;
       });

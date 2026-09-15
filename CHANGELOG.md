@@ -1,3 +1,31 @@
+2.2.0:
+The Action update.
+- renamed GetOrCreateClip to AClip
+- added null checking in validation even though it wasn't needed yet
+- split cross validation into a function
+- dynamic dispatch instead of table
+- deduplicated globals
+- made the Add/Subtract/Multiply actions validate constant bounds (oops)
+- made the Gate action use a single tree
+- made the Add action use a single tree
+- made the Subtract action use a single tree
+- Stitching returns the BlendTree for chaining
+- Stitching can take a parent tree for chaining
+- made the And action use Gate
+- made the Or action use Gate
+- made the Not action use Remap
+- made the Multiply action support negative values
+- added the Copy action
+- added the Compare action
+- added the Absolute action
+- added the Mean action
+- added the Monostable action
+- added the Minimum action
+- added the Maximum action
+- added the Select action
+- added the Timer action
+- added the Frametime action
+
 2.1.0:
 The UX update.
 - made everything internal, if a public API is ever requested things will be exposed deliberately

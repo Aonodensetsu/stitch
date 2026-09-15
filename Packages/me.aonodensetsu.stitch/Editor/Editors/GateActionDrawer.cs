@@ -5,11 +5,14 @@ using UnityEngine;
 
 namespace Me.Aonodensetsu.Stitch {
   [CustomPropertyDrawer(typeof(GateAction), true)]
-  internal class GateActionDrawer : BooleanActionDrawer {
+  internal class GateActionDrawer : PrefixedBinaryActionDrawer {
     internal SerializedProperty zeroZero;
     internal SerializedProperty zeroOne;
     internal SerializedProperty oneZero;
     internal SerializedProperty oneOne;
+
+    internal override bool LeftValidate() => base.LeftValidate() && !float.TryParse(left.stringValue, out _);
+    internal override bool RightValidate() => base.RightValidate() && !float.TryParse(right.stringValue, out _);
 
     public override VisualElement CreatePropertyGUI(SerializedProperty property) {
       zeroZero = property.FindPropertyRelative("zeroZero");
@@ -20,7 +23,6 @@ namespace Me.Aonodensetsu.Stitch {
       var root = new VisualElement();
 
       var lineOne = base.CreatePropertyGUI(property);
-      lineOne.Insert(2, lineOne.ElementAt(3));
       root.Add(lineOne);
 
       var lineTwo = new VisualElement {

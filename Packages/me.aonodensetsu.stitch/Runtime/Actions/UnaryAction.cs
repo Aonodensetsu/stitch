@@ -6,9 +6,7 @@ namespace Me.Aonodensetsu.Stitch {
   public abstract class UnaryAction : Action {
     public string value;
 
-    public override bool Validate() {
-      return base.Validate() && !string.IsNullOrEmpty(value) && !float.TryParse(value, out _);
-    }
+    public override bool Validate() => base.Validate() && !string.IsNullOrEmpty(value) && !float.TryParse(value, out _);
   }
 }
 

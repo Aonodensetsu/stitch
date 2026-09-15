@@ -10,8 +10,17 @@ namespace Me.Aonodensetsu.Stitch {
     internal SerializedProperty left;
     internal SerializedProperty right;
 
-    internal virtual bool LeftValidate() => !string.IsNullOrEmpty(left.stringValue);
-    internal virtual bool RightValidate() => !string.IsNullOrEmpty(right.stringValue) && !(float.TryParse(left.stringValue, out _) && float.TryParse(right.stringValue, out _));
+    internal virtual bool LeftValidate() => !string.IsNullOrEmpty(left.stringValue) && (!float.TryParse(left.stringValue, out var f) || (f >= -100 && f < 100));
+    internal virtual bool RightValidate() => !string.IsNullOrEmpty(right.stringValue) && !(float.TryParse(left.stringValue, out _) && float.TryParse(right.stringValue, out _)) && (!float.TryParse(right.stringValue, out var f) || (f >= -100 && f <= 100));
+
+    internal void CrossValidateProperty(PropertyField change, PropertyField prop, Func<bool> check) {
+      change.RegisterValueChangeCallback(e => {
+        var t = prop.Q<VisualElement>("unity-text-input");
+        if (t == null) return;
+        t.style.borderLeftColor = check() ? StyleKeyword.Null : Color.yellow;
+        t.style.borderLeftWidth = 1;
+      });
+    }
 
     public override VisualElement CreatePropertyGUI(SerializedProperty property) {
       left = property.FindPropertyRelative("left");
@@ -38,13 +47,7 @@ namespace Me.Aonodensetsu.Stitch {
 
       ValidateProperty(leftField, LeftValidate);
       ValidateProperty(rightField, RightValidate);
-
-      leftField.RegisterValueChangeCallback(e => {
-        var f = rightField.Q<VisualElement>("unity-text-input");
-        if (f == null) return;
-        f.style.borderLeftColor = RightValidate() ? StyleKeyword.Null : Color.yellow;
-        f.style.borderLeftWidth = 1;
-      });
+      CrossValidateProperty(leftField, rightField, RightValidate);
 
       return root;
     }

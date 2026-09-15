@@ -10,9 +10,7 @@ namespace Me.Aonodensetsu.Stitch {
     public float lowOut;
     public float highOut;
 
-    public override bool Validate() {
-      return base.Validate() && highIn > lowIn && highOut != lowOut;
-    }
+    public override bool Validate() => base.Validate() && highIn > lowIn && highOut != lowOut;
   }
 }
 

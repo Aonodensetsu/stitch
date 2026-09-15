@@ -13,9 +13,7 @@ namespace Me.Aonodensetsu.Stitch {
     public SmoothType type;
     public float delta;
 
-    public override bool Validate() {
-      return base.Validate() && delta > 0 && delta < 1;
-    }
+    public override bool Validate() => base.Validate() && delta > 0 && delta < 1;
   }
 }
 

@@ -6,9 +6,7 @@ namespace Me.Aonodensetsu.Stitch {
   public abstract class Action {
     public string result;
 
-    public virtual bool Validate() {
-      return !string.IsNullOrEmpty(result) && !float.TryParse(result, out _);
-    }
+    public virtual bool Validate() => !string.IsNullOrEmpty(result) && !float.TryParse(result, out _);
   }
 }
 
