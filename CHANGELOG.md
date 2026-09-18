@@ -1,3 +1,6 @@
+2.3.0:
+- added special handling for sharing via discord
+
 2.2.0:
 The Action update.
 - renamed GetOrCreateClip to AClip
