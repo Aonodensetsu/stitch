@@ -1,17 +1,22 @@
 using System.Collections.Generic;
 using UnityEditor.Animations;
+using Newtonsoft.Json.Linq;
 using UnityEditor;
 using UnityEngine;
 using System.Linq;
+using System.IO;
 using System;
 
 namespace Me.Aonodensetsu.Stitch {
   internal class Actions {
-    private AnimatorController Controller;
     private readonly Dictionary<(string name, float value), AnimationClip> clips = new();
+    internal GameObject Obj;
+    internal AnimatorController Controller;
     internal bool hasTimer = false;
     internal bool hasFrametime = false;
-    internal readonly List<string> globals = new List<string>();
+    internal bool isDebug = false;
+    internal readonly HashSet<string> globals = new HashSet<string>();
+    internal readonly List<PromoteAction> promotions = new List<PromoteAction>();
 
     internal static readonly HashSet<string> VRCGlobals = new HashSet<string> {
       "IsLocal",
@@ -46,11 +51,20 @@ namespace Me.Aonodensetsu.Stitch {
       "EyeHeightAsPercent"
     };
 
-    internal Actions(AnimatorController controller) {
+    internal Actions(GameObject obj, AnimatorController controller) {
+      Obj = obj;
       Controller = controller;
     }
 
     internal string InternParam() => $"StitchInternal_{Guid.NewGuid().ToString("N")}";
+
+    internal AnimationClip EmptyClip() {
+      var key = ("", 0);
+      if (clips.TryGetValue(key, out var clip)) return clip;
+      clip = new AnimationClip { name = "Stitch_Empty", frameRate = 60 };
+      clips.Add(key, clip);
+      return clip;
+    }
 
     internal AnimationClip AClip(string name, float value = 0) {
       var key = (name, value);
@@ -59,7 +73,7 @@ namespace Me.Aonodensetsu.Stitch {
       AnimationUtility.SetEditorCurve(
         clip,
         EditorCurveBinding.FloatCurve("", typeof(Animator), name),
-        new AnimationCurve(new Keyframe(0, value), new Keyframe(1f / 60, value))
+        AnimationCurve.Constant(0, 1f / 60, value)
       );
       clips.Add(key, clip);
       return clip;
@@ -67,19 +81,30 @@ namespace Me.Aonodensetsu.Stitch {
 
     internal void MakeParameters(string[] s) {
       foreach (var param in s) {
-        if (!Controller.parameters.Any(p => p.name == param)) Controller.AddParameter(new AnimatorControllerParameter {
-          name = param,
-          type = AnimatorControllerParameterType.Float,
-          defaultFloat = float.TryParse(param, out float val) ? val : 0
-        });
+        if (!Controller.parameters.Any(p => p.name == param)) {
+          Controller.AddParameter(new AnimatorControllerParameter {
+            name = param,
+            type = AnimatorControllerParameterType.Float,
+            defaultFloat = float.TryParse(param, out float val) ? val : 0
+          });
+          if (VRCGlobals.Contains(param)) globals.Add(param);
+        }
       }
+    }
+
+    internal BlendTree TreeGroup(Action<BlendTree> body, BlendTree parent) {
+      var wrap = parent.CreateBlendTreeChild(0);
+      wrap.blendType = BlendTreeType.Direct;
+      body(wrap);
+      wrap.children = wrap.children.Select(c => { c.directBlendParameter = "1"; return c; }).ToArray();
+      return wrap;
     }
 
     internal BlendTree Stitch(AbsoluteAction a, BlendTree parent) {
       MakeParameters(new[] { a.result, a.value });
 
       var abs = parent.CreateBlendTreeChild(0);
-      abs.name = $"{a.result} = ABS {a.value}";
+      abs.name = $"{a.result} = Absolute {a.value}";
       abs.blendParameter = a.value;
       abs.minThreshold = -100;
       abs.maxThreshold = 100;
@@ -105,7 +130,7 @@ namespace Me.Aonodensetsu.Stitch {
       return plus;
     }
 
-    internal BlendTree Stitch(AndAction a, BlendTree parent = null) {
+    internal BlendTree Stitch(AndAction a, BlendTree parent) {
       var and = Stitch(new GateAction {
         result = a.result,
         left = a.left,
@@ -115,7 +140,7 @@ namespace Me.Aonodensetsu.Stitch {
         oneZero = 0,
         oneOne = 1
       }, parent);
-      and.name = $"{a.result} = {a.left} ∧ {a.right}";
+      and.name = $"{a.result} = {a.left} AND {a.right}";
       return and;
     }
 
@@ -166,7 +191,7 @@ namespace Me.Aonodensetsu.Stitch {
       return cmp;
     }
 
-    internal BlendTree Stitch(CopyAction a, BlendTree parent = null) {
+    internal BlendTree Stitch(CopyAction a, BlendTree parent) {
       var cp = Stitch(new RemapAction {
         result = a.result,
         value = a.value,
@@ -179,6 +204,13 @@ namespace Me.Aonodensetsu.Stitch {
       return cp;
     }
 
+    internal BlendTree Stitch(DebugAction a, BlendTree parent) {
+      Stitch(new DefaultAction { result = a.result, value = JObject.Parse(File.ReadAllText(Path.GetFullPath("Packages/me.aonodensetsu.stitch/package.json")))["version"].ToString().Replace(".", "") });
+      Stitch(new GlobalAction { result = a.result });
+      isDebug = true;
+      return null;
+    }
+
     internal BlendTree Stitch(DefaultAction a, BlendTree parent = null) {
       MakeParameters(new[] { a.result });
       var parameters = Controller.parameters;
@@ -189,26 +221,65 @@ namespace Me.Aonodensetsu.Stitch {
       return null;
     }
 
+    internal BlendTree Stitch(DivideAction a, BlendTree parent) {
+      var rec = InternParam();
+      return TreeGroup(t => {
+        t.name = $"{a.result} = {a.left} / {a.right}";
+        Stitch(new ReciprocalAction { result = rec, value = a.right }, t);
+        Stitch(new MultiplyAction { result = a.result, left = a.left, right = rec }, t);
+      }, parent);
+    }
+
+    internal BlendTree Stitch(DriveAction a, BlendTree parent) {
+      if (DriveActionDrawer.IsConstantClip(a.clip)) return null;
+
+      MakeParameters(new[] { a.result });
+
+      var binds = AnimationUtility.GetCurveBindings(a.clip)
+        .Select(bind => (
+          bind,
+          curve: AnimationUtility.GetEditorCurve(a.clip, bind)
+        ))
+        .Where(x => x.curve != null)
+        .ToArray();
+      var frames = binds.SelectMany(b => b.curve.keys)
+        .Select(k => Mathf.RoundToInt(k.time * a.clip.frameRate))
+        .Distinct()
+        .OrderBy(f => f)
+        .ToArray();
+
+      var drv = parent.CreateBlendTreeChild(0);
+      drv.name = $"{a.result} Drive {a.clip.name}";
+      drv.blendParameter = a.result;
+      drv.useAutomaticThresholds = false;
+      drv.minThreshold = a.min;
+      drv.maxThreshold = a.max;
+
+      foreach (var frame in frames) {
+        var clip = new AnimationClip { name = $"{a.clip.name}_{frame}", frameRate = 60 };
+        foreach (var (bind, curve) in binds) AnimationUtility.SetEditorCurve(clip, bind, AnimationCurve.Constant(0, 1f / 60, curve.Evaluate(frame / a.clip.frameRate)));
+        drv.AddChild(clip, a.min + frame * (a.max - a.min) / (a.clip.frameRate * a.clip.length));
+      }
+
+      return drv;
+    }
+
     internal BlendTree Stitch(FrametimeAction a, BlendTree parent) {
       if (hasFrametime) return null;
       hasFrametime = true;
-      Stitch(new GlobalAction { result = a.result }, parent);
-      Stitch(new GlobalAction { result = "Stitch_Timer_Prev" }, parent);
-      Stitch(new TimerAction(), parent);
+      Stitch(new GlobalAction { result = a.result });
+      Stitch(new GlobalAction { result = "Stitch_Timer_Prev" });
+      Stitch(new TimerAction());
 
-      var ft = parent.CreateBlendTreeChild(0);
-      ft.name = "Stitch Frametime";
-      ft.blendType = BlendTreeType.Direct;
-
-      Stitch(new CopyAction { result = "Stitch_Timer_Prev", value = "Stitch_Timer" }, ft);
-      Stitch(new SubtractAction {
-        result = a.result,
-        left = "Stitch_Timer",
-        right = "Stitch_Timer_Prev"
-      }, ft);
-
-      ft.children = ft.children.Select(c => { c.directBlendParameter = "1"; return c; }).ToArray();
-      return ft;
+      return TreeGroup(t => {
+        t.name = "Stitch Frametime";
+        Stitch(new CopyAction { result = "Stitch_Timer_Prev", value = "Stitch_Timer" }, t);
+        Stitch(new SubtractAction {
+          result = a.result,
+          left = "Stitch_Timer",
+          right = "Stitch_Timer_Prev"
+        }, t);
+      }, parent);
     }
 
     internal BlendTree Stitch(GateAction a, BlendTree parent) {
@@ -245,8 +316,8 @@ namespace Me.Aonodensetsu.Stitch {
       max.blendParameter = a.left;
       max.blendParameterY = a.right;
 
-      Stitch(new CopyAction { result = a.result, value = a.right }, max).name = "";
-      Stitch(new CopyAction { result = a.result, value = a.left }, max).name = "";
+      Stitch(new CopyAction { result = a.result, value = a.right }, max);
+      Stitch(new CopyAction { result = a.result, value = a.left }, max);
 
       var ch = max.children;
       ch[0].position = new Vector2(-1e-5f, 1e-5f);
@@ -282,8 +353,8 @@ namespace Me.Aonodensetsu.Stitch {
       min.blendParameter = a.left;
       min.blendParameterY = a.right;
 
-      Stitch(new CopyAction { result = a.result, value = a.left }, min).name = "";
-      Stitch(new CopyAction { result = a.result, value = a.right }, min).name = "";
+      Stitch(new CopyAction { result = a.result, value = a.left }, min);
+      Stitch(new CopyAction { result = a.result, value = a.right }, min);
 
       var ch = min.children;
       ch[0].position = new Vector2(-1e-5f, 1e-5f);
@@ -293,17 +364,18 @@ namespace Me.Aonodensetsu.Stitch {
       return min;
     }
 
-    internal BlendTree Stitch(MonostableAction a, BlendTree parent = null) {
-      var prev = InternParam();
-      Stitch(new CopyAction { result = prev, value = a.value }, parent).name = "";
-      var ms = Stitch(new CompareAction {
-        result = a.result,
-        left = a.value,
-        right = prev,
-        type = CompareAction.CompareType.Inequal
+    internal BlendTree Stitch(MonostableAction a, BlendTree parent) {
+      return TreeGroup(t => {
+        t.name = $"{a.result} = Monostable {a.value}";
+        var prev = InternParam();
+        Stitch(new CopyAction { result = prev, value = a.value }, t);
+        var ms = Stitch(new CompareAction {
+          result = a.result,
+          left = a.value,
+          right = prev,
+          type = CompareAction.CompareType.Inequal
+        }, t);
       }, parent);
-      ms.name = $"{a.result} = Monostable {a.value}";
-      return ms;
     }
 
     internal BlendTree Stitch(MultiplyAction a, BlendTree parent) {
@@ -332,7 +404,7 @@ namespace Me.Aonodensetsu.Stitch {
       return mul;
     }
 
-    internal BlendTree Stitch(NotAction a, BlendTree parent = null) {
+    internal BlendTree Stitch(NotAction a, BlendTree parent) {
       var not = Stitch(new RemapAction {
         result = a.result,
         value = a.value,
@@ -341,11 +413,11 @@ namespace Me.Aonodensetsu.Stitch {
         lowOut = 1,
         highOut = 0
       }, parent);
-      not.name = $"{a.result} = ¬ {a.value}";
+      not.name = $"{a.result} = NOT {a.value}";
       return not;
     }
 
-    internal BlendTree Stitch(OrAction a, BlendTree parent = null) {
+    internal BlendTree Stitch(OrAction a, BlendTree parent) {
       var or = Stitch(new GateAction {
         result = a.result,
         left = a.left,
@@ -355,8 +427,47 @@ namespace Me.Aonodensetsu.Stitch {
         oneZero = 1,
         oneOne = 1
       }, parent);
-      or.name = $"{a.result} = {a.left} ∨ {a.right}";
+      or.name = $"{a.result} = {a.left} OR {a.right}";
       return or;
+    }
+
+    internal BlendTree Stitch(PromoteAction a, BlendTree parent = null) {
+      MakeParameters(new[] { a.result, a.value });
+      Stitch(new GlobalAction { result = a.result });
+      promotions.Add(a);
+      return null;
+    }
+
+    internal BlendTree Stitch(ReciprocalAction a, BlendTree parent) {
+      var af = InternParam();
+      MakeParameters(new[] { a.result, a.value, af });
+
+      return TreeGroup(t => {
+        t.name = $"{a.result} = 1 / {a.value}";
+
+        var aft = t.CreateBlendTreeChild(0);
+        aft.name = $"{af} = 100 * {a.value} - 1";
+        aft.blendParameter = a.value;
+        aft.minThreshold = 0.01f;
+        aft.maxThreshold = 100;
+        aft.AddChild(AClip(af, 0));
+        aft.AddChild(AClip(af, 9999));
+
+        var r2 = parent.CreateBlendTreeChild(0);
+        r2.name = $"{a.result} = 100 / (1 + {af})";
+        r2.blendType = BlendTreeType.Direct;
+        using (var so = new SerializedObject(r2)) {
+          so.FindProperty("m_NormalizedBlendValues").boolValue = true;  // normally inaccessible
+          so.ApplyModifiedProperties();
+        }
+        r2.AddChild(EmptyClip());
+        r2.AddChild(AClip(a.result, 100));
+
+        var ch = r2.children;
+        ch[0].directBlendParameter = af;
+        ch[1].directBlendParameter = "1";
+        r2.children = ch;
+      }, parent);
     }
 
     internal BlendTree Stitch(RemapAction a, BlendTree parent) {
@@ -381,8 +492,8 @@ namespace Me.Aonodensetsu.Stitch {
       sel.name = $"{a.result} = {a.left} Select {a.middle} {a.right}";
       sel.blendParameter = a.left;
 
-      Stitch(new CopyAction { result = a.result, value = a.middle }, sel).name = "";
-      Stitch(new CopyAction { result = a.result, value = a.right }, sel).name = "";
+      Stitch(new CopyAction { result = a.result, value = a.middle }, sel);
+      Stitch(new CopyAction { result = a.result, value = a.right }, sel);
 
       return sel;
     }
@@ -471,7 +582,7 @@ namespace Me.Aonodensetsu.Stitch {
     internal BlendTree Stitch(TimerAction a, BlendTree parent = null) {
       if (hasTimer) return null;
       hasTimer = true;
-      Stitch(new GlobalAction { result = a.result }, parent);
+      Stitch(new GlobalAction { result = a.result });
       return null;
     }
   }

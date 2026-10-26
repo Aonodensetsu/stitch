@@ -6,8 +6,8 @@ namespace Me.Aonodensetsu.Stitch {
   [Action("action.gate")]
   public class GateAction : BooleanAction {
     public float zeroZero;
-    public float zeroOne;
-    public float oneZero;
+    public float zeroOne = 1;
+    public float oneZero = 1;
     public float oneOne;
   }
 }

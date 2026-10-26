@@ -5,6 +5,8 @@
 Stitch is a tool inspired by VRCFury (and integrating with it or Modular Avatar), which aims at the place VRCFury deliberately excludes from its scope - Controllers.  
 Stitch requires VRCFury or Modular Avatar to be installed.
 
+If you like it, feel free to ![show support](https://img.shields.io/badge/show%20support-purple?logo=kofi&link=https%3A%2F%2Fko-fi.com%2Faonodensetsu).
+
 ### Usage
 
 Stitch is distributed as a VPM package, so just click: ![Add Stitch to VCC](https://img.shields.io/badge/Add_Stitch_to_VCC-blue?link=vcc%3A%2F%2Fvpm%2FaddRepo%3Furl%3Dhttps%3A%2F%2FAonodensetsu.github.io%2Fstitch%2Findex.json), then add it to any of your projects and you're all set!
@@ -26,7 +28,7 @@ The possibilities of those and their limitations apply.
 
 ---
 
-### Logic > And [∧]
+### Logic > And
 
 ![and action](media/and.png)
 
@@ -56,7 +58,7 @@ The Not action uses a more performant setup, use it instead of this.
 
 </details>
 
-### Logic > Not [¬]
+### Logic > Not
 
 ![not action](media/not.png)
 
@@ -67,7 +69,7 @@ The output is on when the input is off.
 For values between zero and one, this is equivalent to 1 - n.  
 This implementation is more performant than the Subtract action (and equivalent to Remap 0-1->1-0).
 
-### Logic > Or [∨]
+### Logic > Or
 
 ![or action](media/or.png)
 
@@ -82,7 +84,7 @@ The output is on when either of the inputs is on.
 The Absolute action returns the same value as the input for positive inputs, and the negated value for negative ones.  
 The input value is restricted in the range -100 to 100.  
 
-### Math > Add [+]
+### Math > Add
 
 ![add action](media/add.png)
 
@@ -105,6 +107,16 @@ The Compare actions provides common value comparisons between two values:
 The comparisons have a tolerance of 1/140 (slightly less than VRChat's sync precision).  
 The input values are restricted in the range -100 to 100.  
 The output is on then the comparison is true.
+
+### Math > Divide
+
+![divide action](media/divide.png)
+
+The Divide action divides the values of its inputs.  
+The left input value is restricted in the range -100 to 100.  
+The right input value is restricted in the range 0.01 to 100.  
+The output is delayed by one frame in terms of the right input.  
+Either input (but not both) can be replaced with a constant number.
 
 ### Math > Maximum
 
@@ -130,7 +142,7 @@ The Minimum action returns the smaller of the inputs.
 The input values are restricted in the range -100 to 100.  
 Either input (but not both) can be replaced with a constant number.
 
-### Math > Multiply [×]
+### Math > Multiply
 
 ![multiply action](media/multiply.png)
 
@@ -138,7 +150,14 @@ The Multiply action multiplies the values of two parameters.
 The input values are restricted in the range -100 to 100.  
 Either input (but not both) can be replaced with a constant number.
 
-### Math > Subtract [−]
+### Math > Reciprocal
+
+![reciprocal action](media/reciprocal.png)
+
+The Reciprocal action result is 1 divided by the input.  
+The input value is restricted in the range 0.01 to 100.
+
+### Math > Subtract
 
 ![subtract action](media/subtract.png)
 
@@ -181,6 +200,22 @@ Use this action when a parameter needs to be shared between different setups.
 ![monostable action](media/monostable.png)
 
 The output value is 1 for a single frame whenever the input value changes.
+
+### Parameter > Promote
+
+![promote action](media/promote.png)
+
+The Promote action allows a parameter created using Stitch to be used outside the animator.  
+By default that is not possible due to the nature of AAPs (which make Stitch work).  
+The Promote action uses one Contact Sender and Receiver.  
+The input parameter is restricted in the range 0 to 1.  
+The output parameter is marked Global and delayed by one frame in terms of the input.  
+
+The Promote action can work in two modes:
+- Contact  
+  The default mode, appropriate most times. The input parameter drives a pair of contacts in a way copying its value. The output parameter can be used like any other contact's value.
+- Synced  
+  As above, but the contacts are local only and the output parameter is added to Expression Parameters as synced. This means the parameter is only driven by you and synced to other players. While the above mode will remain synced most of the time, as animators do, this will always be synced at the cost of a synced float. Generally not recommended.
 
 ### Parameter > Remap
 
@@ -225,6 +260,22 @@ The smoothing strength is restricted in the range 0 to 1.
 The Timer action provides a count of seconds since the animator was enabled.  
 Resets every ~27 hours.  
 Only one shared timer is created for all usages of the Action.
+
+### Advanced > Debug
+
+![debug action](media/debug.png)
+
+The Debug action disables tree optimization for easier inspection.  
+It also makes performance significantly worse, do not leave enabled after done.  
+Currently the Drive action does not work in Debug mode on Modular Avatar, not sure why.
+
+### Advanced > Drive
+
+![drive action](media/drive.png)
+
+The Drive action allows using a parameter to execute a valid (if it works via VRCFury Toggle on the same object) animation clip based on the parameter value.  
+This is meant for 2+ frame animations and converts the animation into a 1D blend tree. The curve tangents are not perfectly recreated.  
+The two number inputs are the minimum and maximum value of the parameter, which correspond to the beginning and end of the clip.  
 
 ---
 

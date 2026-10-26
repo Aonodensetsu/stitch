@@ -3,6 +3,7 @@ using UnityEditor.UIElements;
 using UnityEditor;
 using UnityEngine.UIElements;
 using UnityEngine;
+using System.Linq;
 using System;
 
 namespace Me.Aonodensetsu.Stitch {
@@ -21,8 +22,8 @@ namespace Me.Aonodensetsu.Stitch {
       });
     }
 
-    internal static void mkError(string text, VisualElement parent) {
-      var h = new HelpBox(text, HelpBoxMessageType.Error) {
+    internal static HelpBox mkError(string text, VisualElement parent, HelpBoxMessageType t = HelpBoxMessageType.Error) {
+      var h = new HelpBox(text, t) {
         style = {
           marginTop = Margin * 2,
           marginBottom = Margin * 2
@@ -32,6 +33,7 @@ namespace Me.Aonodensetsu.Stitch {
       var l = h.Q<Label>();
       l.style.fontSize = 13;
       l.style.whiteSpace = WhiteSpace.Normal;
+      return h;
     }
 
     internal static VisualElement mkToolbar(VisualElement parent) {
@@ -185,6 +187,15 @@ namespace Me.Aonodensetsu.Stitch {
       addBtn.clicked += () => {
         rmBtn.SetEnabled(true);
       };
+
+      void updateDebugWarn() {
+        root.Q<HelpBox>("debugWarning")?.RemoveFromHierarchy();
+        if (Enumerable.Range(0, actionsProperty.arraySize).Any(i => actionsProperty.GetArrayElementAtIndex(i).managedReferenceValue is DebugAction)) {
+          mkError(Strings.Get("support.debugEnabled"), root, HelpBoxMessageType.Warning).name = "debugWarning";
+        };
+      }
+      root.TrackSerializedObjectValue(serializedObject, _ => updateDebugWarn());
+      updateDebugWarn();
 
       return root;
     }

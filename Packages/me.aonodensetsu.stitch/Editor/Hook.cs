@@ -1,3 +1,4 @@
+using VRC.SDK3.Dynamics.Contact.Components;
 using VRC.SDKBase.Editor.BuildPipeline;
 using System.Collections.Generic;
 using UnityEditor.Animations;
@@ -19,14 +20,25 @@ namespace Me.Aonodensetsu.Stitch {
 
     public int callbackOrder => -19742;
 
+    internal AnimationClip PromoteClip(string name, float value = 0) {
+      var clip = new AnimationClip { name = $"{name}_{value}", frameRate = 60 };
+      AnimationUtility.SetEditorCurve(
+        clip,
+        EditorCurveBinding.FloatCurve(name, typeof(Transform), "m_LocalPosition.y"),
+        AnimationCurve.Constant(0, 1f / 60, value)
+      );
+      return clip;
+    }
+
     public bool OnPreprocessAvatar(GameObject avatar) {
       if (publisher is InstructionPublisher p) {
-        p.Publish(avatar);
+        p.Publish(new Actions(avatar, null));
         return true;
       }
 
       var hasTimer = false;
       var hasFrametime = false;
+      GameObject promoteReceiver = null;
       foreach (var (obj, actions) in avatar
         .GetComponentsInChildren<StitchMenu>(true)
         .GroupBy(c => c.gameObject)
@@ -35,13 +47,14 @@ namespace Me.Aonodensetsu.Stitch {
         var id = Math.Abs(obj.GetInstanceID()).ToString("X");
         var f = obj.GetComponentsInChildren<StitchMenu>().First();
         var controller = new AnimatorController();
-        var act = new Actions(controller);
+        var act = new Actions(obj, controller);
         act.hasTimer = hasTimer;
         act.hasFrametime = hasFrametime;
 
         controller.AddLayer(new AnimatorControllerLayer {
           stateMachine = new AnimatorStateMachine(),
-          name = $"Stitch_{id}"
+          name = $"Stitch_{id}",
+          defaultWeight = 1f
         });
         act.Stitch(new DefaultAction { result = "1", value = "1" });
 
@@ -53,10 +66,6 @@ namespace Me.Aonodensetsu.Stitch {
             continue;
           }
           act.Stitch((dynamic)action, tree);
-        }
-        tree.children = tree.children.Select(c => { c.directBlendParameter = "1"; return c; }).ToArray();
-        foreach (var param in controller.parameters) {
-          if (Actions.VRCGlobals.Contains(param.name)) act.globals.Add(param.name);
         }
 
         if (act.hasTimer && !hasTimer) {
@@ -75,13 +84,54 @@ namespace Me.Aonodensetsu.Stitch {
           sm.AddState("Stitch_Timer").motion = clip;
           controller.AddLayer(new AnimatorControllerLayer {
             stateMachine = sm,
-            name = "Stitch_Timer"
+            name = "Stitch_Timer",
+            defaultWeight = 1f
           });
         }
         hasFrametime = act.hasFrametime;
         hasTimer = act.hasTimer;
 
-        publisher.Publish(obj, controller, act.globals.Distinct().ToList());
+        foreach (var action in act.promotions) {
+          if (!promoteReceiver) {
+            promoteReceiver = new GameObject { name = "Stitch_PromoteReceiver" };
+            promoteReceiver.transform.SetParent(avatar.transform, false);
+          }
+          var promoteSender = new GameObject { name = $"Stitch_PromoteSender_{action.result}" };
+          promoteSender.transform.SetParent(avatar.transform);
+          promoteSender.transform.localPosition = new Vector3(0, 0.1f, 0);
+
+          var pname = $"Stitch_Promote_{action.result}";
+          var prm = tree.CreateBlendTreeChild(0);
+          prm.blendParameter = action.value;
+          prm.AddChild(PromoteClip(promoteSender.name, 0.1f));
+          prm.AddChild(PromoteClip(promoteSender.name, 0.05f));
+
+          var rec = promoteReceiver.AddComponent<VRCContactReceiver>();
+          rec.radius = 0.05f;
+          rec.UpdateContentTypes(VRC.Dynamics.DynamicsUsageFlags.Avatar);
+          rec.allowOthers = false;
+          rec.UpdateCollisionTags(new[] { pname });
+          rec.receiverType = VRC.Dynamics.ContactReceiver.ReceiverType.Proximity;
+          rec.parameter = action.result;
+
+          var send = promoteSender.AddComponent<VRCContactSender>();
+          send.radius = 0.05f;
+          send.UpdateContentTypes(VRC.Dynamics.DynamicsUsageFlags.Avatar);
+          send.UpdateCollisionTags(new[] { pname });
+
+          if (action.type == PromoteAction.PromoteType.Synced) {
+            rec.localOnly = true;
+            send.localOnly = true;
+          }
+          rec.ApplyConfigurationChanges();
+          send.ApplyConfigurationChanges();
+        }
+
+        tree.children = tree.children.Select(c => { c.directBlendParameter = "1"; return c; }).ToArray();
+
+        if (act.isDebug) controller.layers[0].stateMachine.AddStateMachine($"DEBUG_prevent_DBT_merge");
+
+        publisher.Publish(act);
       }
       return true;
     }

@@ -9,7 +9,7 @@ namespace Me.Aonodensetsu.Stitch {
   internal class UnaryActionDrawer : ActionDrawer {
     internal SerializedProperty value;
 
-    internal virtual bool ValueValidate() => !string.IsNullOrEmpty(value.stringValue);
+    internal virtual bool ValueValidate() => !string.IsNullOrEmpty(value.stringValue) && !float.TryParse(value.stringValue, out _);
 
     public override VisualElement CreatePropertyGUI(SerializedProperty property) {
       value = property.FindPropertyRelative("value");

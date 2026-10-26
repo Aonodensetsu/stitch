@@ -6,6 +6,10 @@ namespace Me.Aonodensetsu.Stitch {
   [Action("action.default")]
   public class DefaultAction : UnaryAction {
     public override bool Validate() => !string.IsNullOrEmpty(result) && !float.TryParse(result, out _) && float.TryParse(value, out _);
+
+    public DefaultAction() {
+      value = "1";
+    }
   }
 }
 

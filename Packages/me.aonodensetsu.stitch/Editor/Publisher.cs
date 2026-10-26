@@ -5,6 +5,7 @@ using UnityEngine;
 using System.Linq;
 
 #if HAS_VF
+using VRC.SDK3.Avatars.ScriptableObjects;
 using com.vrcfury.api;
 #endif
 
@@ -14,11 +15,11 @@ using nadena.dev.modular_avatar.core;
 
 namespace Me.Aonodensetsu.Stitch {
   internal interface Publisher {
-    void Publish(GameObject obj, AnimatorController controller, List<string> globals);
+    void Publish(Actions actions);
   }
 
   internal class InstructionPublisher : Publisher {
-    public void Publish(GameObject obj, AnimatorController controller = null, List<string> globals = null) {
+    public void Publish(Actions actions) {
       var flagPath = $"Assets/{Strings.Get("support.manualFlag")}.prefab";
       var flag = AssetDatabase.LoadAssetAtPath<GameObject>(flagPath);
       if (flag != null) {
@@ -26,7 +27,7 @@ namespace Me.Aonodensetsu.Stitch {
         return;
       }
       var msg = new GameObject("Stitch");
-      msg.transform.parent = obj.transform;
+      msg.transform.parent = actions.Obj.transform;
       msg.tag = "EditorOnly";
       UnityEditorInternal.InternalEditorUtility.SetIsInspectorExpanded(msg.transform, false);
       msg.AddComponent<StitchInstruction>();
@@ -38,32 +39,48 @@ namespace Me.Aonodensetsu.Stitch {
 
   #if HAS_VF
   internal class VRCFuryPublisher : Publisher {
-    public void Publish(GameObject obj, AnimatorController controller, List<string> globals) {
-      var fc = FuryComponents.CreateFullController(obj);
-      foreach (var p in globals) fc.AddGlobalParam(p);
-      fc.AddController(controller);
+    public void Publish(Actions actions) {
+      var fc = FuryComponents.CreateFullController(actions.Obj);
+      foreach (var p in actions.globals) fc.AddGlobalParam(p);
+      if (actions.promotions.Any(a => a.type == PromoteAction.PromoteType.Synced)) fc.AddParams(new VRCExpressionParameters {
+        parameters = actions.promotions.Where(a => a.type == PromoteAction.PromoteType.Synced).Select(e => new VRCExpressionParameters.Parameter {
+          name = e.result,
+          valueType = VRCExpressionParameters.ValueType.Float,
+          saved = false
+        }).ToArray()
+      });
+      fc.AddController(actions.Controller);
     }
   }
   #endif
 
   #if HAS_MA
   internal class ModularAvatarPublisher : Publisher {
-    public void Publish(GameObject obj, AnimatorController controller, List<string> globals) {
-      var mp = obj.AddComponent<ModularAvatarParameters>();
-      mp.parameters.AddRange(
-        controller.parameters.Select(p => new ParameterConfig {
+    // NOTE: the Drive action doesn't work in debug mode for some reason
+    public void Publish(Actions actions) {
+      actions.Obj.AddComponent<ModularAvatarParameters>().parameters.AddRange(
+        actions.Controller.parameters.Select(p => new ParameterConfig {
           nameOrPrefix = p.name,
           isPrefix = false,
           defaultValue = p.defaultFloat,
-          syncType = ParameterSyncType.NotSynced,
-          internalParameter = !globals.Contains(p.name),
-          localOnly = true,
+          syncType = actions.promotions.Where(a => a.type == PromoteAction.PromoteType.Synced).Select(e => e.result).Contains(p.name) ? ParameterSyncType.Float : ParameterSyncType.NotSynced,
+          internalParameter = !actions.globals.Contains(p.name),
+          localOnly = !actions.promotions.Select(x => x.result).Contains(p.name),
           saved = false
         })
       );
 
-      var mm = obj.AddComponent<ModularAvatarMergeBlendTree>();
-      mm.Motion = controller.layers[0].stateMachine.states[0].state.motion;
+      if (!actions.isDebug) {
+        var t = actions.Obj.AddComponent<ModularAvatarMergeBlendTree>();
+        t.Motion = actions.Controller.layers[0].stateMachine.states[0].state.motion;
+        t.PathMode = nadena.dev.modular_avatar.core.MergeAnimatorPathMode.Absolute;
+      }
+      if (actions.isDebug || actions.Controller.layers.Length > 1) {
+        actions.Controller.layers = actions.Controller.layers.Skip(actions.isDebug ? 0 : 1).ToArray();
+        var c = actions.Obj.AddComponent<ModularAvatarMergeAnimator>();
+        c.animator = actions.Controller;
+        c.pathMode = nadena.dev.modular_avatar.core.MergeAnimatorPathMode.Absolute;
+      }
     }
   }
   #endif

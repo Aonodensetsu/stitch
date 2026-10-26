@@ -14,7 +14,7 @@ namespace Me.Aonodensetsu.Stitch {
 
     internal override bool ValueValidate() => base.ValueValidate() && !float.TryParse(value.stringValue, out _);
     internal virtual bool HighInValidate() => highIn.floatValue > lowIn.floatValue;
-    internal virtual bool HighOutValidate() => highOut.floatValue != lowOut.floatValue;
+    internal virtual bool HighOutValidate() => !Mathf.Approximately(highOut.floatValue, lowOut.floatValue);
 
     public override VisualElement CreatePropertyGUI(SerializedProperty property) {
       lowIn = property.FindPropertyRelative("lowIn");
@@ -35,12 +35,13 @@ namespace Me.Aonodensetsu.Stitch {
       };
       root.Add(lineTwo);
 
-      lineTwo.Add(new PropertyField(lowIn, "") {
+      var lowInProp = new PropertyField(lowIn, "") {
         style = {
           flexGrow = 1,
           marginRight = 6 + StitchMenuEditor.Margin
         }
-      });
+      };
+      lineTwo.Add(lowInProp);
       lineTwo.Add(new Label(Strings.Get("general.remapDash")));
 
       var highInProp = new PropertyField(highIn, "") {
@@ -54,13 +55,14 @@ namespace Me.Aonodensetsu.Stitch {
 
       lineTwo.Add(new Label(Strings.Get("general.remapTo")));
 
-      lineTwo.Add(new PropertyField(lowOut, "") {
+      var lowOutProp = new PropertyField(lowOut, "") {
         style = {
           flexGrow = 1,
           marginLeft = StitchMenuEditor.Margin,
           marginRight = 6 + StitchMenuEditor.Margin
         }
-      });
+      };
+      lineTwo.Add(lowOutProp);
       lineTwo.Add(new Label(Strings.Get("general.remapDash")));
 
       var highOutProp = new PropertyField(highOut, "") {
@@ -73,6 +75,8 @@ namespace Me.Aonodensetsu.Stitch {
 
       ValidateProperty(highInProp, HighInValidate);
       ValidateProperty(highOutProp, HighOutValidate);
+      CrossValidateProperty(lowInProp, highInProp, HighInValidate);
+      CrossValidateProperty(lowOutProp, highOutProp, HighOutValidate);
       return root;
     }
   }

@@ -8,6 +8,7 @@ using System;
 namespace Me.Aonodensetsu.Stitch {
   [CustomPropertyDrawer(typeof(TimerAction), true)]
   [CustomPropertyDrawer(typeof(FrametimeAction), true)]
+  [CustomPropertyDrawer(typeof(DebugAction), true)]
   internal class TimerActionDrawer : ActionDrawer {
     public override VisualElement CreatePropertyGUI(SerializedProperty property) {
       var root = base.CreatePropertyGUI(property);

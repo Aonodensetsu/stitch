@@ -28,6 +28,15 @@ namespace Me.Aonodensetsu.Stitch {
       });
     }
 
+    internal void CrossValidateProperty(PropertyField change, PropertyField prop, Func<bool> check) {
+      change.RegisterValueChangeCallback(e => {
+        var t = prop.Q<VisualElement>("unity-text-input");
+        if (t == null) return;
+        t.style.borderLeftColor = check() ? StyleKeyword.Null : Color.yellow;
+        t.style.borderLeftWidth = 1;
+      });
+    }
+
     public override VisualElement CreatePropertyGUI(SerializedProperty property) {
       result = property.FindPropertyRelative("result");
 

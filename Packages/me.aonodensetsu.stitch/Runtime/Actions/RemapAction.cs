@@ -6,11 +6,11 @@ namespace Me.Aonodensetsu.Stitch {
   [Action("action.remap")]
   public class RemapAction : UnaryAction {
     public float lowIn;
-    public float highIn;
+    public float highIn = 1;
     public float lowOut;
-    public float highOut;
+    public float highOut = 1;
 
-    public override bool Validate() => base.Validate() && highIn > lowIn && highOut != lowOut;
+    public override bool Validate() => base.Validate() && highIn > lowIn && !Mathf.Approximately(highOut, lowOut);
   }
 }
 

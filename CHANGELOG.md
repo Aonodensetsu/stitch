@@ -1,5 +1,24 @@
 2.3.0:
+- changed the localization of actions using a symbol to a word as everything else already was
 - added special handling for sharing via discord
+- fixed the validation highlight for unary actions
+- intermediate trees no longer get their names removed
+- added ko-fi message
+- added the Reciprocal action
+- added the Divide action
+- added the Promote action
+- added the Debug action
+- added the Drive action
+  - which for some reason doesn't work in debug mode on MA
+- fixed the Timer and Frametime actions for Modular Avatar
+  - also explicitly defined animation mode as Absolute, so far this wasn't needed but will be, going forward
+- fixed a bug in the validation preview of the Remap action
+- fixed the default value of the timer layer being inconsistent
+- changed the default range of the Remap action to 0-1 -> 0-1, which is valid
+- changed the default value of the Default action to 1, which is valid
+- changed the default logic value of the Gate action to 0110, which is an XOR
+- changed the default value of the Smooth action's delta to 0.5, which is valid
+- moved where default VRC globals are tracked
 
 2.2.0:
 The Action update.
