@@ -39,6 +39,7 @@ namespace Me.Aonodensetsu.Stitch {
       var hasTimer = false;
       var hasFrametime = false;
       GameObject promoteReceiver = null;
+
       foreach (var (obj, actions) in avatar
         .GetComponentsInChildren<StitchMenu>(true)
         .GroupBy(c => c.gameObject)
@@ -60,22 +61,23 @@ namespace Me.Aonodensetsu.Stitch {
 
         controller.CreateBlendTreeInController($"Stitch_{id}", out var tree);
         tree.blendType = BlendTreeType.Direct;
+
         foreach (var action in actions) {
           if (!action.Validate()) {
             Debug.LogWarning($"Stitch: {Strings.Get("log.invalidAction")}", obj);
             continue;
           }
+          act.actions.Add(action);
           act.Stitch((dynamic)action, tree);
         }
 
         if (act.hasTimer && !hasTimer) {
           var clip = new AnimationClip { name = "Stitch_Timer", frameRate = 60 };
-          var curve = new AnimationCurve(new Keyframe(0, 0), new Keyframe(1e5f, 1e5f));
-          for (int i = 0; i < curve.length; i++) {
-            AnimationUtility.SetKeyLeftTangentMode(curve, i, AnimationUtility.TangentMode.Linear);
-            AnimationUtility.SetKeyRightTangentMode(curve, i, AnimationUtility.TangentMode.Linear);
-          }
-          AnimationUtility.SetEditorCurve(clip, EditorCurveBinding.FloatCurve("", typeof(Animator), "Stitch_Timer"), curve);
+          AnimationUtility.SetEditorCurve(
+            clip,
+            EditorCurveBinding.FloatCurve("", typeof(Animator), "Stitch_Timer"), 
+            AnimationCurve.Linear(0, 0, 1e5f, 1e5f)
+          );
           var sett = AnimationUtility.GetAnimationClipSettings(clip);
           sett.loopTime = true;
           AnimationUtility.SetAnimationClipSettings(clip, sett);
@@ -91,7 +93,7 @@ namespace Me.Aonodensetsu.Stitch {
         hasFrametime = act.hasFrametime;
         hasTimer = act.hasTimer;
 
-        foreach (var action in act.promotions) {
+        foreach (var action in act.actions.OfType<PromoteAction>()) {
           if (!promoteReceiver) {
             promoteReceiver = new GameObject { name = "Stitch_PromoteReceiver" };
             promoteReceiver.transform.SetParent(avatar.transform, false);

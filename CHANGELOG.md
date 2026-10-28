@@ -1,3 +1,7 @@
+2.3.1:
+- added the Input action
+- passing all the valid actions to publishers
+
 2.3.0:
 - changed the localization of actions using a symbol to a word as everything else already was
 - added special handling for sharing via discord

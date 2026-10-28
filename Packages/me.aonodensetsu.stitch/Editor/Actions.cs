@@ -15,8 +15,8 @@ namespace Me.Aonodensetsu.Stitch {
     internal bool hasTimer = false;
     internal bool hasFrametime = false;
     internal bool isDebug = false;
+    internal readonly List<Action> actions = new List<Action>();
     internal readonly HashSet<string> globals = new HashSet<string>();
-    internal readonly List<PromoteAction> promotions = new List<PromoteAction>();
 
     internal static readonly HashSet<string> VRCGlobals = new HashSet<string> {
       "IsLocal",
@@ -231,7 +231,10 @@ namespace Me.Aonodensetsu.Stitch {
     }
 
     internal BlendTree Stitch(DriveAction a, BlendTree parent) {
-      if (DriveActionDrawer.IsConstantClip(a.clip)) return null;
+      if (DriveActionDrawer.IsConstantClip(a.clip)) {
+        actions.Remove(a);
+        return null;
+      }
 
       MakeParameters(new[] { a.result });
 
@@ -301,6 +304,11 @@ namespace Me.Aonodensetsu.Stitch {
     internal BlendTree Stitch(GlobalAction a, BlendTree parent = null) {
       MakeParameters(new[] { a.result });
       globals.Add(a.result);
+      return null;
+    }
+
+    internal BlendTree Stitch(InputAction a, BlendTree parent = null) {
+      MakeParameters(a.param.parameters.Select(p => p.name).ToArray());
       return null;
     }
 
@@ -434,7 +442,6 @@ namespace Me.Aonodensetsu.Stitch {
     internal BlendTree Stitch(PromoteAction a, BlendTree parent = null) {
       MakeParameters(new[] { a.result, a.value });
       Stitch(new GlobalAction { result = a.result });
-      promotions.Add(a);
       return null;
     }
 

@@ -1,3 +1,4 @@
+using VRC.SDK3.Avatars.ScriptableObjects;
 using System.Collections.Generic;
 using UnityEditor.Animations;
 using UnityEditor;
@@ -5,7 +6,6 @@ using UnityEngine;
 using System.Linq;
 
 #if HAS_VF
-using VRC.SDK3.Avatars.ScriptableObjects;
 using com.vrcfury.api;
 #endif
 
@@ -41,14 +41,23 @@ namespace Me.Aonodensetsu.Stitch {
   internal class VRCFuryPublisher : Publisher {
     public void Publish(Actions actions) {
       var fc = FuryComponents.CreateFullController(actions.Obj);
+
       foreach (var p in actions.globals) fc.AddGlobalParam(p);
-      if (actions.promotions.Any(a => a.type == PromoteAction.PromoteType.Synced)) fc.AddParams(new VRCExpressionParameters {
-        parameters = actions.promotions.Where(a => a.type == PromoteAction.PromoteType.Synced).Select(e => new VRCExpressionParameters.Parameter {
+
+      foreach (var i in actions.actions.OfType<InputAction>()) {
+        if (i.menu) fc.AddMenu(i.menu, i.result);
+        if (i.param) fc.AddParams(i.param);
+      }
+
+      var promotions = actions.actions.OfType<PromoteAction>();
+      if (promotions.Any(a => a.type == PromoteAction.PromoteType.Synced)) fc.AddParams(new VRCExpressionParameters {
+        parameters = promotions.Where(a => a.type == PromoteAction.PromoteType.Synced).Select(e => new VRCExpressionParameters.Parameter {
           name = e.result,
           valueType = VRCExpressionParameters.ValueType.Float,
           saved = false
         }).ToArray()
       });
+
       fc.AddController(actions.Controller);
     }
   }
@@ -58,28 +67,65 @@ namespace Me.Aonodensetsu.Stitch {
   internal class ModularAvatarPublisher : Publisher {
     // NOTE: the Drive action doesn't work in debug mode for some reason
     public void Publish(Actions actions) {
-      actions.Obj.AddComponent<ModularAvatarParameters>().parameters.AddRange(
+      var param = actions.Obj.AddComponent<ModularAvatarParameters>();
+
+      var promotions = actions.actions.OfType<PromoteAction>();
+      param.parameters.AddRange(
         actions.Controller.parameters.Select(p => new ParameterConfig {
           nameOrPrefix = p.name,
           isPrefix = false,
           defaultValue = p.defaultFloat,
-          syncType = actions.promotions.Where(a => a.type == PromoteAction.PromoteType.Synced).Select(e => e.result).Contains(p.name) ? ParameterSyncType.Float : ParameterSyncType.NotSynced,
+          syncType = promotions.Where(a => a.type == PromoteAction.PromoteType.Synced).Select(e => e.result).Contains(p.name) ? ParameterSyncType.Float : ParameterSyncType.NotSynced,
           internalParameter = !actions.globals.Contains(p.name),
-          localOnly = !actions.promotions.Select(x => x.result).Contains(p.name),
+          localOnly = !promotions.Select(x => x.result).Contains(p.name),
           saved = false
         })
       );
 
+      foreach (var i in actions.actions.OfType<InputAction>()) {
+        if (i.menu) {
+          var menu = i.menu;
+          foreach (var path in i.result.Split("/").Reverse()) {
+            menu = new VRCExpressionsMenu {
+              controls = new List<VRCExpressionsMenu.Control> {
+                new VRCExpressionsMenu.Control {
+                  name = path,
+                  type = VRCExpressionsMenu.Control.ControlType.SubMenu,
+                  subMenu = menu
+                }
+              }
+            };
+          }
+          actions.Obj.AddComponent<ModularAvatarMenuInstaller>().menuToAppend = menu;
+        }
+        if (i.param) {
+          param.parameters.AddRange(i.param.parameters.Select(p => new ParameterConfig {
+            nameOrPrefix = p.name,
+            isPrefix = false,
+            defaultValue = p.defaultValue,
+            syncType = p.networkSynced ? p.valueType switch {
+              VRCExpressionParameters.ValueType.Int => ParameterSyncType.Int,
+              VRCExpressionParameters.ValueType.Float => ParameterSyncType.Float,
+              VRCExpressionParameters.ValueType.Bool => ParameterSyncType.Bool,
+              _ => ParameterSyncType.NotSynced
+            } : ParameterSyncType.NotSynced,
+            internalParameter = !actions.globals.Contains(p.name),
+            localOnly = !p.networkSynced,
+            saved = p.saved
+          }));
+        }
+      }
+
       if (!actions.isDebug) {
         var t = actions.Obj.AddComponent<ModularAvatarMergeBlendTree>();
         t.Motion = actions.Controller.layers[0].stateMachine.states[0].state.motion;
-        t.PathMode = nadena.dev.modular_avatar.core.MergeAnimatorPathMode.Absolute;
+        t.PathMode = MergeAnimatorPathMode.Absolute;
       }
       if (actions.isDebug || actions.Controller.layers.Length > 1) {
         actions.Controller.layers = actions.Controller.layers.Skip(actions.isDebug ? 0 : 1).ToArray();
         var c = actions.Obj.AddComponent<ModularAvatarMergeAnimator>();
         c.animator = actions.Controller;
-        c.pathMode = nadena.dev.modular_avatar.core.MergeAnimatorPathMode.Absolute;
+        c.pathMode = MergeAnimatorPathMode.Absolute;
       }
     }
   }

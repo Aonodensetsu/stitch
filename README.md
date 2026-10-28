@@ -277,6 +277,13 @@ The Drive action allows using a parameter to execute a valid (if it works via VR
 This is meant for 2+ frame animations and converts the animation into a 1D blend tree. The curve tangents are not perfectly recreated.  
 The two number inputs are the minimum and maximum value of the parameter, which correspond to the beginning and end of the clip.  
 
+### Advanced > Input
+
+![input action](media/input.png)
+
+The Input action allows attaching VRC Expression Menu and/or VRC Expression Parameter components.  
+This can be used to create toggles in the context of Stitch's renamed parameters without using global values.
+
 ---
 
 In the case VRCFury and Modular Avatar are not installed, after setting up Stitch, clicking Build & Test (or Build & Publish) in the VRChat SDK panel will create a prefab with instructions to install one of the dependencies.  

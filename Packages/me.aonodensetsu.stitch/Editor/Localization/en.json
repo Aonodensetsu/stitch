@@ -18,6 +18,7 @@
   "general.gateZeroOne": "01",
   "general.gateOneZero": "10",
   "general.gateOneOne": "11",
+  "general.inputPrefix": "Menu Prefix",
   "action.global": "Parameter/Global",
   "action.default": "Parameter/Default",
   "action.smooth": "Parameter/Smooth",
@@ -44,6 +45,7 @@
   "action.divide": "Math/Divide",
   "action.debug": "Advanced/Debug",
   "action.drive": "Advanced/Drive",
+  "action.input": "Advanced/Input",
   "log.noRebuild": "No supported auto-publishing method found and instructions already created, skipping.",
   "log.createInstruction": "No supported auto-publishing method found, creating instruction message.",
   "log.invalidAction": "Invalid action, skipped."
