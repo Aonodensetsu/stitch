@@ -104,7 +104,6 @@ The Compare actions provides common value comparisons between two values:
 - Equal  
 - Inequal  
 
-The comparisons have a tolerance of 1/140 (slightly less than VRChat's sync precision).  
 The input values are restricted in the range -100 to 100.  
 The output is on then the comparison is true.
 
