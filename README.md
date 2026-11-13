@@ -260,6 +260,13 @@ The Timer action provides a count of seconds since the animator was enabled.
 Resets every ~27 hours.  
 Only one shared timer is created for all usages of the Action.
 
+### Advanced > Controller
+
+![controller action](media/controller.png)
+
+The Controller action allows attaching an Animator Controller asset.  
+This can be used to implement any logic unavailable in Stitch in the context of Stitch's renamed parameters without using global values.
+
 ### Advanced > Debug
 
 ![debug action](media/debug.png)
@@ -272,9 +279,8 @@ Currently the Drive action does not work in Debug mode on Modular Avatar, not su
 
 ![drive action](media/drive.png)
 
-The Drive action allows using a parameter to execute a valid (if it works via VRCFury Toggle on the same object) animation clip based on the parameter value.  
-This is meant for 2+ frame animations and converts the animation into a 1D blend tree. The curve tangents are not perfectly recreated.  
-The two number inputs are the minimum and maximum value of the parameter, which correspond to the beginning and end of the clip.  
+The Drive action allows converting a 2+ frame animation into a 1D blend tree. The curve tangents are not recreated.  
+The two number inputs are the minimum and maximum value of the parameter, which correspond to the beginning and end of the clip.
 
 ### Advanced > Input
 

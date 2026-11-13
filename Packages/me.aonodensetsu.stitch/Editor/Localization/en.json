@@ -46,6 +46,7 @@
   "action.debug": "Advanced/Debug",
   "action.drive": "Advanced/Drive",
   "action.input": "Advanced/Input",
+  "action.controller": "Advanced/Controller",
   "log.noRebuild": "No supported auto-publishing method found and instructions already created, skipping.",
   "log.createInstruction": "No supported auto-publishing method found, creating instruction message.",
   "log.invalidAction": "Invalid action, skipped."

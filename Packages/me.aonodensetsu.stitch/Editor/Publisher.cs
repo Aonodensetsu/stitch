@@ -49,6 +49,8 @@ namespace Me.Aonodensetsu.Stitch {
         if (i.param) fc.AddParams(i.param);
       }
 
+      foreach (var c in actions.actions.OfType<ControllerAction>()) fc.AddController(c.c);
+
       var promotions = actions.actions.OfType<PromoteAction>();
       if (promotions.Any(a => a.type == PromoteAction.PromoteType.Synced)) fc.AddParams(new VRCExpressionParameters {
         parameters = promotions.Where(a => a.type == PromoteAction.PromoteType.Synced).Select(e => new VRCExpressionParameters.Parameter {
@@ -125,6 +127,23 @@ namespace Me.Aonodensetsu.Stitch {
         actions.Controller.layers = actions.Controller.layers.Skip(actions.isDebug ? 0 : 1).ToArray();
         var c = actions.Obj.AddComponent<ModularAvatarMergeAnimator>();
         c.animator = actions.Controller;
+        c.pathMode = MergeAnimatorPathMode.Absolute;
+      }
+
+      foreach (var a in actions.actions.OfType<ControllerAction>()) {
+        param.parameters.AddRange(
+          (a.c as AnimatorController).parameters.Where(p => !param.parameters.Any(ep => ep.nameOrPrefix == p.name)).Select(p => new ParameterConfig {
+            nameOrPrefix = p.name,
+            isPrefix = false,
+            defaultValue = p.defaultFloat,
+            syncType = ParameterSyncType.NotSynced,
+            internalParameter = !actions.globals.Contains(p.name),
+            localOnly = true,
+            saved = false
+          })
+        );
+        var c = actions.Obj.AddComponent<ModularAvatarMergeAnimator>();
+        c.animator = a.c;
         c.pathMode = MergeAnimatorPathMode.Absolute;
       }
     }

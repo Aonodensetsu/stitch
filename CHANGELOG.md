@@ -1,3 +1,6 @@
+2.3.2:
+- added the Controller action
+
 2.3.1:
 - added the Input action
 - passing all the valid actions to publishers

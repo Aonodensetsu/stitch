@@ -191,6 +191,11 @@ namespace Me.Aonodensetsu.Stitch {
       return cmp;
     }
 
+    internal BlendTree Stitch(ControllerAction a, BlendTree parent = null) {
+      // merged by publisher
+      return null;
+    }
+
     internal BlendTree Stitch(CopyAction a, BlendTree parent) {
       var cp = Stitch(new RemapAction {
         result = a.result,
