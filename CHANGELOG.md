@@ -1,3 +1,7 @@
+2.3.3:
+- randomly moves the Stitch promoting contacts between 5-10 meters
+  - this moves them outside the 5x5x5 grid cell limitation
+
 2.3.2:
 - added the Controller action
 

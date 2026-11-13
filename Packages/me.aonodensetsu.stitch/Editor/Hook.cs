@@ -97,16 +97,17 @@ namespace Me.Aonodensetsu.Stitch {
           if (!promoteReceiver) {
             promoteReceiver = new GameObject { name = "Stitch_PromoteReceiver" };
             promoteReceiver.transform.SetParent(avatar.transform, false);
+            promoteReceiver.transform.localPosition += UnityEngine.Random.onUnitSphere * UnityEngine.Random.Range(5f, 10f);
           }
           var promoteSender = new GameObject { name = $"Stitch_PromoteSender_{action.result}" };
-          promoteSender.transform.SetParent(avatar.transform);
+          promoteSender.transform.SetParent(promoteReceiver.transform);
           promoteSender.transform.localPosition = new Vector3(0, 0.1f, 0);
 
           var pname = $"Stitch_Promote_{action.result}";
           var prm = tree.CreateBlendTreeChild(0);
           prm.blendParameter = action.value;
-          prm.AddChild(PromoteClip(promoteSender.name, 0.1f));
-          prm.AddChild(PromoteClip(promoteSender.name, 0.05f));
+          prm.AddChild(PromoteClip($"{promoteReceiver.name}/{promoteSender.name}", 0.1f));
+          prm.AddChild(PromoteClip($"{promoteReceiver.name}/{promoteSender.name}", 0.05f));
 
           var rec = promoteReceiver.AddComponent<VRCContactReceiver>();
           rec.radius = 0.05f;
