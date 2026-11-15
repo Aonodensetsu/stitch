@@ -1,3 +1,7 @@
+2.3.5:
+- debug fixed in MA
+- MA integration now done through an ndmf plugin
+
 2.3.4:
 - user animations are in relative mode in MA
 - debug is still broken in MA, contacted them

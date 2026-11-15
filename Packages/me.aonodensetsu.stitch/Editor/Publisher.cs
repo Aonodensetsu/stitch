@@ -129,6 +129,7 @@ namespace Me.Aonodensetsu.Stitch {
         c.layers = c.layers.Take(1).ToArray();
         a.animator = c;
         a.pathMode = MergeAnimatorPathMode.Relative;
+        a.layerPriority = -1;
       }
 
       if (actions.Controller.layers.Length > 1) {

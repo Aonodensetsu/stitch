@@ -3,6 +3,7 @@
   "references": [
     "Stitch.Runtime",
     "com.vrcfury.api",
+    "nadena.dev.ndmf",
     "nadena.dev.modular-avatar.core"
   ],
   "includePlatforms": [

@@ -272,8 +272,7 @@ This can be used to implement any logic unavailable in Stitch in the context of 
 ![debug action](media/debug.png)
 
 The Debug action disables tree optimization for easier inspection.  
-It also makes performance significantly worse, do not leave enabled after done.  
-Broken in MA for what seems like no reason.
+It also makes performance significantly worse, do not leave enabled after done.
 
 ### Advanced > Drive
 

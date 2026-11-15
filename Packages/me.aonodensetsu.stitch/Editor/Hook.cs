@@ -20,7 +20,7 @@ namespace Me.Aonodensetsu.Stitch {
 
     public int callbackOrder => -19742;
 
-    internal AnimationClip PromoteClip(string name, float value = 0) {
+    internal static AnimationClip PromoteClip(string name, float value = 0) {
       var clip = new AnimationClip { name = $"{name}_{value}", frameRate = 60 };
       AnimationUtility.SetEditorCurve(
         clip,
@@ -30,12 +30,7 @@ namespace Me.Aonodensetsu.Stitch {
       return clip;
     }
 
-    public bool OnPreprocessAvatar(GameObject avatar) {
-      if (publisher is InstructionPublisher p) {
-        p.Publish(new Actions(avatar, null));
-        return true;
-      }
-
+    public static bool RunBuild(GameObject avatar) {
       var hasTimer = false;
       var hasFrametime = false;
       GameObject promoteReceiver = null;
@@ -47,7 +42,6 @@ namespace Me.Aonodensetsu.Stitch {
         .Select(g => ( obj: g.Key, actions: g.SelectMany(c => c.actions) ))
       ) {
         var id = Math.Abs(obj.GetInstanceID()).ToString("X");
-        var f = obj.GetComponentsInChildren<StitchMenu>().First();
         var controller = new AnimatorController();
         var act = new Actions(obj, controller);
         act.hasTimer = hasTimer;
@@ -147,6 +141,21 @@ namespace Me.Aonodensetsu.Stitch {
         publisher.Publish(act);
       }
       return true;
+    }
+
+    public bool OnPreprocessAvatar(GameObject avatar) {
+      #if !HAS_VF && HAS_MA
+      // MA integration is now using an NDMF module
+      #pragma warning disable CS0162
+      return true;
+      #endif
+
+      if (publisher is InstructionPublisher p) {
+        p.Publish(new Actions(avatar, null));
+        return true;
+      }
+
+      return RunBuild(avatar);
     }
   }
 }
