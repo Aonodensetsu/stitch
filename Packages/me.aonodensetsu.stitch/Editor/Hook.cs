@@ -39,6 +39,7 @@ namespace Me.Aonodensetsu.Stitch {
       var hasTimer = false;
       var hasFrametime = false;
       GameObject promoteReceiver = null;
+      BlendTree promoteTree = null;
 
       foreach (var (obj, actions) in avatar
         .GetComponentsInChildren<StitchMenu>(true)
@@ -95,6 +96,16 @@ namespace Me.Aonodensetsu.Stitch {
 
         foreach (var action in act.actions.OfType<PromoteAction>()) {
           if (!promoteReceiver) {
+            var sm = new AnimatorStateMachine();
+            controller.AddLayer(new AnimatorControllerLayer {
+              stateMachine = sm,
+              name = "Stitch_Promotions",
+              defaultWeight = 1f
+            });
+            controller.CreateBlendTreeInController("Stitch_Promotions", out var pt, controller.layers.Length - 1);
+            pt.blendType = BlendTreeType.Direct;
+            promoteTree = pt;
+
             promoteReceiver = new GameObject { name = "Stitch_PromoteReceiver" };
             promoteReceiver.transform.SetParent(avatar.transform, false);
             promoteReceiver.transform.localPosition += UnityEngine.Random.onUnitSphere * UnityEngine.Random.Range(5f, 10f);
@@ -104,7 +115,7 @@ namespace Me.Aonodensetsu.Stitch {
           promoteSender.transform.localPosition = new Vector3(0, 0.1f, 0);
 
           var pname = $"Stitch_Promote_{action.result}";
-          var prm = tree.CreateBlendTreeChild(0);
+          var prm = promoteTree.CreateBlendTreeChild(0);
           prm.blendParameter = action.value;
           prm.AddChild(PromoteClip($"{promoteReceiver.name}/{promoteSender.name}", 0.1f));
           prm.AddChild(PromoteClip($"{promoteReceiver.name}/{promoteSender.name}", 0.05f));
@@ -131,8 +142,7 @@ namespace Me.Aonodensetsu.Stitch {
         }
 
         tree.children = tree.children.Select(c => { c.directBlendParameter = "1"; return c; }).ToArray();
-
-        if (act.isDebug) controller.layers[0].stateMachine.AddStateMachine($"DEBUG_prevent_DBT_merge");
+        if (promoteTree != null) promoteTree.children = promoteTree.children.Select(c => { c.directBlendParameter = "1"; return c; }).ToArray();
 
         publisher.Publish(act);
       }

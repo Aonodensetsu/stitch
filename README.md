@@ -273,7 +273,7 @@ This can be used to implement any logic unavailable in Stitch in the context of 
 
 The Debug action disables tree optimization for easier inspection.  
 It also makes performance significantly worse, do not leave enabled after done.  
-Currently the Drive action does not work in Debug mode on Modular Avatar, not sure why.
+Broken in MA for what seems like no reason.
 
 ### Advanced > Drive
 

@@ -40,6 +40,8 @@ namespace Me.Aonodensetsu.Stitch {
   #if HAS_VF
   internal class VRCFuryPublisher : Publisher {
     public void Publish(Actions actions) {
+      if (actions.isDebug) actions.Controller.layers.ToList().ForEach(l => l.stateMachine.AddStateMachine($"DEBUG_prevent_DBT_merge"));
+
       var fc = FuryComponents.CreateFullController(actions.Obj);
 
       foreach (var p in actions.globals) fc.AddGlobalParam(p);
@@ -67,7 +69,6 @@ namespace Me.Aonodensetsu.Stitch {
 
   #if HAS_MA
   internal class ModularAvatarPublisher : Publisher {
-    // NOTE: the Drive action doesn't work in debug mode for some reason
     public void Publish(Actions actions) {
       var param = actions.Obj.AddComponent<ModularAvatarParameters>();
 
@@ -121,10 +122,17 @@ namespace Me.Aonodensetsu.Stitch {
       if (!actions.isDebug) {
         var t = actions.Obj.AddComponent<ModularAvatarMergeBlendTree>();
         t.Motion = actions.Controller.layers[0].stateMachine.states[0].state.motion;
-        t.PathMode = MergeAnimatorPathMode.Absolute;
+        t.PathMode = MergeAnimatorPathMode.Relative;
+      } else {
+        var a = actions.Obj.AddComponent<ModularAvatarMergeAnimator>();
+        var c = Object.Instantiate(actions.Controller);
+        c.layers = c.layers.Take(1).ToArray();
+        a.animator = c;
+        a.pathMode = MergeAnimatorPathMode.Relative;
       }
-      if (actions.isDebug || actions.Controller.layers.Length > 1) {
-        actions.Controller.layers = actions.Controller.layers.Skip(actions.isDebug ? 0 : 1).ToArray();
+
+      if (actions.Controller.layers.Length > 1) {
+        actions.Controller.layers = actions.Controller.layers.Skip(1).ToArray();
         var c = actions.Obj.AddComponent<ModularAvatarMergeAnimator>();
         c.animator = actions.Controller;
         c.pathMode = MergeAnimatorPathMode.Absolute;
@@ -144,7 +152,7 @@ namespace Me.Aonodensetsu.Stitch {
         );
         var c = actions.Obj.AddComponent<ModularAvatarMergeAnimator>();
         c.animator = a.c;
-        c.pathMode = MergeAnimatorPathMode.Absolute;
+        c.pathMode = MergeAnimatorPathMode.Relative;
       }
     }
   }
