@@ -1,3 +1,7 @@
+2.3.6:
+- added LICENSE (oops, this got lost when i moved to the vrc template)
+- minor readme formatting
+
 2.3.5:
 - debug fixed in MA
 - MA integration now done through an ndmf plugin
