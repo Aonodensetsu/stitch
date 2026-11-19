@@ -5,11 +5,14 @@
 Stitch is a tool inspired by VRCFury (and integrating with it or Modular Avatar), which aims at the place VRCFury deliberately excludes from its scope - Controllers.  
 Stitch requires VRCFury or Modular Avatar to be installed.
 
-If you like it, feel free to ![show support](https://img.shields.io/badge/show%20support-purple?logo=kofi&link=https%3A%2F%2Fko-fi.com%2Faonodensetsu).
+If you like it, feel free to [![show support](https://img.shields.io/badge/show%20support-purple?logo=kofi&link=https%3A%2F%2Fko-fi.com%2Faonodensetsu)](https://ko-fi.com/aonodensetsu).
+
+[![get support](https://img.shields.io/badge/get%20support-darkblue?logo=discord&link=https%3A%2F%2Fdiscord.gg%2FVnbSM9h3h5)](https://discord.gg/VnbSM9h3h5)
 
 ### Usage
 
-Stitch is distributed as a VPM package, so just click: ![Add Stitch to VCC](https://img.shields.io/badge/Add_Stitch_to_VCC-blue?link=vcc%3A%2F%2Fvpm%2FaddRepo%3Furl%3Dhttps%3A%2F%2FAonodensetsu.github.io%2Fstitch%2Findex.json), then add it to any of your projects and you're all set!
+Stitch is distributed as a VPM package, so just click: [![Add Stitch to VCC](https://img.shields.io/badge/Add%20Stitch%20to%20VCC-blue?link=vcc%3A%2F%2Fvpm%2FaddRepo%3Furl%3Dhttps%3A%2F%2Faonodensetsu.github.io%2Fstitch%2Findex.json
+)](https://aonodensetsu.github.io/stitch/?redirectToVcc=1), then add it to any of your projects and you're all set!
 
 Similarly to other non-destructive editors, click Add Component at the bottom of any of your avatar's objects, then choose Stitch to access its menu.
 
