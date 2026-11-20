@@ -283,7 +283,9 @@ This can be used to implement any logic unavailable in Stitch in the context of 
 ![debug action](media/debug.png)
 
 The Debug action disables tree optimization for easier inspection.  
-It also makes performance significantly worse, do not leave enabled after done.
+This performance significantly worse, do not leave enabled after done.
+
+In addition, it allows performing a destructive bake of a single object outside of play mode.
 
 ### Drive
 
