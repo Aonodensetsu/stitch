@@ -30,16 +30,55 @@ namespace Me.Aonodensetsu.Stitch {
       return clip;
     }
 
-    public static bool RunBuild(GameObject avatar) {
+    internal static bool IsEditorOnly(GameObject obj) {
+      while (obj != null) {
+        if (obj.CompareTag("EditorOnly")) return true;
+        obj = obj.transform.parent?.gameObject;
+      }
+      return false;
+    }
+
+    internal static void DebugSaveController(AnimatorController c) {
+      if (c == null) return;
+
+      const string path = "Assets/StitchDebugController.controller";
+      AssetDatabase.CreateAsset(c, path);
+
+      var visited = new HashSet<UnityEngine.Object>();
+
+      void Visit(UnityEngine.Object obj) {
+        if (obj == null || !visited.Add(obj)) return;
+
+        var serialized = new SerializedObject(obj);
+        var iterator = serialized.GetIterator();
+
+        while (iterator.Next(true)) {
+          if (iterator.propertyType != SerializedPropertyType.ObjectReference) continue;
+
+          var child = iterator.objectReferenceValue;
+          if (child == null || child == obj || AssetDatabase.Contains(child)) continue;
+
+          Visit(child);
+          AssetDatabase.AddObjectToAsset(child, c);
+        }
+    }
+
+    Visit(c);
+    AssetDatabase.SaveAssets();
+    AssetDatabase.Refresh();
+    }
+
+    public static bool RunBuild(GameObject avatar, bool debug = false) {
       var hasTimer = false;
       var hasFrametime = false;
       GameObject promoteReceiver = null;
       BlendTree promoteTree = null;
 
-      foreach (var (obj, actions) in avatar
-        .GetComponentsInChildren<StitchMenu>(true)
+      var comps = debug ? avatar.GetComponents<StitchMenu>() : avatar.GetComponentsInChildren<StitchMenu>(true);
+      foreach (var (obj, actions) in comps
         .GroupBy(c => c.gameObject)
         .Select(g => ( obj: g.Key, actions: g.SelectMany(c => c.actions) ))
+        .Where(g => !IsEditorOnly(g.obj))
       ) {
         var id = Math.Abs(obj.GetInstanceID()).ToString("X");
         var controller = new AnimatorController();
@@ -137,6 +176,8 @@ namespace Me.Aonodensetsu.Stitch {
 
         tree.children = tree.children.Select(c => { c.directBlendParameter = "1"; return c; }).ToArray();
         if (promoteTree != null) promoteTree.children = promoteTree.children.Select(c => { c.directBlendParameter = "1"; return c; }).ToArray();
+
+        if (debug) DebugSaveController(controller);
 
         publisher.Publish(act);
       }

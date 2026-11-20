@@ -1,3 +1,4 @@
+using VRC.SDK3.Avatars.Components;
 using System.Collections.Generic;
 using UnityEditor.UIElements;
 using UnityEditor;
@@ -65,8 +66,8 @@ namespace Me.Aonodensetsu.Stitch {
         var row = new VisualElement();
         row.Add(new PropertyField {
           style = {
-            marginTop = Margin,
-            marginBottom = Margin,
+            marginTop = Margin * 2,
+            marginBottom = Margin * 2,
             marginRight = Margin
           }
         });
@@ -189,10 +190,40 @@ namespace Me.Aonodensetsu.Stitch {
       };
 
       void updateDebugWarn() {
-        root.Q<HelpBox>("debugWarning")?.RemoveFromHierarchy();
+        root.Q<VisualElement>("debugWarning")?.RemoveFromHierarchy();
         if (Enumerable.Range(0, actionsProperty.arraySize).Any(i => actionsProperty.GetArrayElementAtIndex(i).managedReferenceValue is DebugAction)) {
-          mkError(Strings.Get("support.debugEnabled"), root, HelpBoxMessageType.Warning).name = "debugWarning";
-        };
+          var container = new VisualElement {
+            name = "debugWarning",
+            style = {
+              flexDirection = FlexDirection.Row,
+              alignItems = Align.Center,
+              marginTop = Margin,
+              marginBottom = Margin
+            }
+          };
+
+          var err = mkError(
+            Strings.Get("support.debugEnabled"),
+            container,
+            HelpBoxMessageType.Warning
+          );
+          err.style.flexGrow = 1;
+          err.style.marginTop = 0;
+          err.style.marginBottom = 0;
+
+          var btn = new Button(() => {
+            var dbgObj = (serializedObject.targetObject as Component)?.gameObject;
+            if (dbgObj != null) Hook.RunBuild(dbgObj, true);
+          }) {
+            text = Strings.Get("support.debugBake"),
+            style = {
+              alignSelf = Align.Stretch
+            }
+          };
+
+          container.Add(btn);
+          root.Add(container);
+        }
       }
       root.TrackSerializedObjectValue(serializedObject, _ => updateDebugWarn());
       updateDebugWarn();

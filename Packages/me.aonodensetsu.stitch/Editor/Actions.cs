@@ -313,7 +313,9 @@ namespace Me.Aonodensetsu.Stitch {
     }
 
     internal BlendTree Stitch(InputAction a, BlendTree parent = null) {
-      MakeParameters(a.param.parameters.Select(p => p.name).ToArray());
+      foreach (var p in a.param.parameters) {
+        Stitch(new DefaultAction { result = p.name, value = p.defaultValue.ToString(System.Globalization.CultureInfo.InvariantCulture) });
+      }
       return null;
     }
 
@@ -512,7 +514,7 @@ namespace Me.Aonodensetsu.Stitch {
 
     internal BlendTree Stitch(SmoothAction a, BlendTree parent) {
       // TODO: try to optimize
-      var delta = a.delta.ToString();
+      var delta = a.delta.ToString(System.Globalization.CultureInfo.InvariantCulture);
       MakeParameters(new[] { a.result, a.value, delta });
 
       var negative = AClip(a.result, -100);

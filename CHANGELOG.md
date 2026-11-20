@@ -1,3 +1,10 @@
+2.3.8:
+- Input action aligns controller defaults with the expression parameters
+- float to string conversion is now culture invariant
+- more spacing between Actions
+- EditorOnly objects are now ignored in line with VRCFury
+- added destructive debug bake
+
 2.3.7:
 - fixed build running twice with VF and MA installed
 

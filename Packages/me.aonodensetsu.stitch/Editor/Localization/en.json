@@ -6,6 +6,7 @@
   "support.manualFlag": "STITCH_INSTRUCTIONS",
   "support.missingTools": "Stitch has to integrate with another package to deploy its changes automatically in a non-destructive way.\n\nNone of the supported packages were detected, so you should install one.",
   "support.debugEnabled": "This component contains a Debug Action and will not be optimized. Make sure to remove it after finishing.",
+  "support.debugBake": "Debug Bake",
   "support.VF": "Install VRCFury",
   "support.MA": "Install Modular Avatar",
   "general.equal": "=",
