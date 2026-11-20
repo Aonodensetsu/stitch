@@ -1,3 +1,6 @@
+2.3.7:
+- fixed build running twice with VF and MA installed
+
 2.3.6:
 - added LICENSE (oops, this got lost when i moved to the vrc template)
 - minor readme formatting

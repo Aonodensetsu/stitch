@@ -1,4 +1,4 @@
-#if HAS_MA
+#if !HAS_VF && HAS_MA
 using nadena.dev.ndmf;
 
 [assembly: ExportsPlugin(typeof(Me.Aonodensetsu.Stitch.StitchMAPlugin))]
